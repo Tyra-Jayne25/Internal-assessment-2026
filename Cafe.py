@@ -41,3 +41,17 @@ current_order = {}
 order_type = None # dine-in or takeaway
 customer_name = None
 table_number = None
+
+# ===== FUNCTIONS =====
+def display_menu():
+    print("")
+    print("====================================")
+    print("WELCOME TO OUR CAFE")
+    print("====================================")
+    
+    for category, items in MENU_ITEMS.items():
+        print("")
+        print(category + ":")
+        print("------------------------------------")
+        for item, price in items.items():
+            print("  " + item + " - £" + str(price))
