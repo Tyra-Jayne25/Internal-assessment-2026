@@ -55,3 +55,25 @@ def display_menu():
         print("------------------------------------")
         for item, price in items.items():
             print("  " + item + " - £" + str(price))
+
+# Order type selection
+def get_order_type():
+    global order_type
+
+    while True:
+        print("")
+        print("====================================")
+        print("Please select order type")
+        print("====================================")
+        print("1. Dine-in")
+        print("2. Takeaway")
+        choice = input("Enter 1 or 2: ")
+
+        if choice == "1":
+            order_type = "Dine-in"
+            break
+        elif choice == "2":
+            order_type = "Takeaway"
+            break
+        else:
+            print("Invalid choice. Please enter 1 or 2.")
