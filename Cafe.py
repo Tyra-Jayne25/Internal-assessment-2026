@@ -43,8 +43,7 @@ customer_name = None
 table_number = None
 
 # ===== FUNCTIONS =====
-def display_menu():
-    print("")
+def display_menu(): #display menu items and prices
     print("====================================")
     print("WELCOME TO OUR CAFE")
     print("====================================")
@@ -57,7 +56,7 @@ def display_menu():
             print("  " + item + " - £" + str(price))
 
 # Order type selection
-def get_order_type():
+def get_order_type(): 
     global order_type
 
     while True:
@@ -78,8 +77,7 @@ def get_order_type():
         else:
             print("Invalid input. Please enter 1 or 2.")
 
-def get_dine_in_table(): 
-    """Assign a table for dine-in customers"""
+def get_dine_in_table(): #assign table number to customer if they choose dine-in and check for table availability, if no tables are available, inform the customer and ask them to wait for the next available table.
     global table_number, available_tables
     
     if not available_tables:
@@ -91,7 +89,7 @@ def get_dine_in_table():
     print(f"\nYour table number: {table_number}") 
     return True
 
-def get_customer_name():
+def get_customer_name(): #prompt customer to enter their name for their takeaway order
     global customer_name
 
     while True:
@@ -102,7 +100,7 @@ def get_customer_name():
         else:
             print("Name cannot be empty. Please try again.")
 
-def take_order():
+def take_order(): # allow customer to select items and quantities for their order
     global current_order
     current_order = {}
 
@@ -128,7 +126,7 @@ def take_order():
                     current_order[item] = {"quanitity": quantity, "price": price}
                 break
 
-def displau_order_summary():
+def displau_order_summary(): #display itemised order summary with total cost
     if not current_order:
         print("\nYour order is empty")
         return 0
@@ -151,3 +149,65 @@ def displau_order_summary():
     print("=====================================")
     return total_cost
 
+def confirm_order(): #ask customer to confirm or cancel their order
+    while True:
+        choice = input("\nComplete order? (yes/no): ").strip().lower()
+        if choice == "yes":
+            return True
+        elif choice == "no":
+            return False
+        else:
+            print("Invalid input. Please enter 'yes' or 'no'.")
+
+def release_table(): # alow staff to release a table back to aaliable
+    global available_tables
+    
+    print("\n" + "=" * 50)
+    print("RELEASE TABLE")
+    print("=" * 50)
+    
+    occupied = sorted(set(range(1, MAX_TABLES + 1)) - available_tables)
+    if not occupied:
+        print("No tables are currently occupied.")
+        return
+    
+    print(f"Currently occupied tables: {occupied}")
+    
+    while True:
+        table_input = input("Enter table number to release (0 to cancel): ").strip()
+        try:
+            table = int(table_input)
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
+            continue
+        
+        if table == 0:
+            break
+        if 1 <= table <= MAX_TABLES and table not in available_tables:
+            available_tables.add(table)
+            print(f"Table {table} has been released.")
+            break
+        else:
+            print(f"Invalid table number. Please enter a number between 1 and {MAX_TABLES}.")
+
+def process_order(): #complete the order and print final details
+    total = display_order_summary()
+    
+    print(f"\nOrder Type: {order_type.upper()}")
+    
+    if order_type == "dine-in":
+        print(f"Table Number: {table_number}")
+    else:
+        print(f"Customer Name: {customer_name}")
+    
+    print("\nOrder completed! Thank you for your purchase.")
+    return total
+
+
+def reset_order():
+    """Reset all order variables for next customer."""
+    global current_order, order_type, customer_name, table_number
+    current_order = {}
+    order_type = None
+    customer_name = None
+    table_number = None
