@@ -162,9 +162,9 @@ def confirm_order(): #ask customer to confirm or cancel their order
 def release_table(): # alow staff to release a table back to aaliable
     global available_tables
     
-    print("================================")
+    print("=====================================")
     print("RELEASE TABLE")
-    print("================================")
+    print("====================================")
     
     occupied = sorted(set(range(1, MAX_TABLES + 1)) - available_tables)
     if not occupied:
