@@ -166,7 +166,7 @@ def release_table(): # alow staff to release a table back to aaliable
     print("RELEASE TABLE")
     print("================================")
     
-    occupied = sorted(set(range(1, MAX_TABLES + 10)) - available_tables)
+    occupied = sorted(set(range(1, MAX_TABLES + 1)) - available_tables)
     if not occupied:
         print("No tables are currently occupied.")
         return
