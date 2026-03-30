@@ -78,3 +78,29 @@ def get_order_type():
         else:
             print("Invalid input. Please enter 1 or 2.")
 
+def get_dine_in_table(): 
+    """Assign a table for dine-in customers"""
+    global table_number, available_tables
+    
+    if not available_tables:
+        print("Sorry, no tables avaliable. Please wait for the next avaliable table.")
+        return False
+    
+    table_number = min(available_tables)
+    available_tables.remove(table_number)
+    print(f"\nYour table number: {table_number}") 
+    return True
+
+def get_customer_name():
+    global customer_name
+
+    while True:
+        name = input("\nPlease enter your name: ").strip()
+        if name:
+            customer_name = name
+            break
+        else:
+            print("Name cannot be empty. Please try again.")
+
+
+
