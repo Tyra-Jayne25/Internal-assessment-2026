@@ -126,7 +126,7 @@ def take_order(): # allow customer to select items and quantities for their orde
                     current_order[item] = {"quanitity": quantity, "price": price}
                 break
 
-def displau_order_summary(): #display itemised order summary with total cost
+def display_order_summary(): #display itemised order summary with total cost
     if not current_order:
         print("\nYour order is empty")
         return 0
@@ -211,3 +211,52 @@ def reset_order():
     order_type = None
     customer_name = None
     table_number = None
+
+#Main program loop
+def start_system():
+    print("Cafe Ordering System")
+    print("=====================")
+
+    while True:
+        print("\nMAIN MENU:")
+        print("1. Start New Order")
+        print("2. Release Table")
+        print("3. Quit")
+        choice = input("Select an option (1-3): ").strip()
+
+        if choice == "1":
+            print("\nPress Enter to start your order (or 'q' to cancel)...")
+            user_input = input().strip().lower()
+            if user_input == "q":
+                continue
+
+            display_menu()
+            get_order_type()
+
+            if order_type == "Dine-in":
+                if not get_dine_in_table():
+                    reset_order()
+                    continue
+
+            else:
+                get_customer_name()
+            take_order()
+
+            if current_order and confirm_order():
+                process_order()
+            else:
+                print("Order cancelled.")
+            reset_order()
+
+        elif choice == "2":
+            release_table()
+
+        elif choice == "3":
+            print("Thank you for using our system. Goodbye!")
+            break
+
+        else:
+            print("Invalid option. Please enter 1, 2, or 3.")
+
+if __name__ == "__main__":
+    start_system()
