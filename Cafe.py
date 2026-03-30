@@ -111,4 +111,42 @@ def take_order():
     print("=====================================")
 
     for category, items in MENU_ITEMS.items():
-        print("")
+        print(f"\n{category}:")
+        for item, price in items.items():
+            while True:
+                quantity_input = input(f" {item} - £{price:.2f}) - Quantity (0 to skip): ").strip()
+                try:
+                    quantity = int(quantity_input)
+                except ValueError:
+                    print("Invalid input. Please enter a whole number.")
+                    continue
+
+                if quantity < 0 or quantity > MAX_ITEM_QUANITITY:
+                    print(f"Please enter a number between 0 and {MAX_ITEM_QUANITITY}.")
+                    continue
+                if quantity > 0:
+                    current_order[item] = {"quanitity": quantity, "price": price}
+                break
+
+def displau_order_summary():
+    if not current_order:
+        print("\nYour order is empty")
+        return 0
+    
+    print("=====================================")
+    print("ORDER SUMMARY")
+    print("=====================================")
+    
+    total_cost = 0
+    
+    for item, details in current_order.items():
+        quantity = details["quanitity"]
+        price = details["price"]
+        item_total = quantity * price
+        total_cost += item_total
+        print(f"{item} x {quantity} - £{item_total:.2f}")
+
+    print("=====================================")
+    print(f"{'TOTAL':<25} {'':5} £{total_cost:.2f}")
+    print("=====================================")
+    return total_cost
