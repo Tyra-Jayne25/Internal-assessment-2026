@@ -150,3 +150,4 @@ def displau_order_summary():
     print(f"{'TOTAL':<25} {'':5} £{total_cost:.2f}")
     print("=====================================")
     return total_cost
+
