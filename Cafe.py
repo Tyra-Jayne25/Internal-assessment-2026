@@ -36,7 +36,7 @@ MAX_TABLES = 10
 MAX_ITEM_QUANITITY = 5 
 
 # ===== GLOBAL VARIABLES =====
-available_tables = list(range(1, MAX_TABLES + 1 ))
+available_tables = set(range(1, MAX_TABLES + 1 ))
 current_order = {}
 order_type = None # dine-in or takeaway
 customer_name = None
