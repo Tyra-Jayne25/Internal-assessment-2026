@@ -102,5 +102,13 @@ def get_customer_name():
         else:
             print("Name cannot be empty. Please try again.")
 
+def take_order():
+    global current_order
+    current_order = {}
 
+    print("=====================================")
+    print("ADD ITEMS TO YOUR ORDER")
+    print("=====================================")
 
+    for category, items in MENU_ITEMS.items():
+        print("")
