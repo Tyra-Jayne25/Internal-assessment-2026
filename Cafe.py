@@ -63,11 +63,11 @@ def get_order_type():
     while True:
         print("")
         print("====================================")
-        print("Please select order type")
+        print("ORDER TYPE")
         print("====================================")
         print("1. Dine-in")
         print("2. Takeaway")
-        choice = input("Enter 1 or 2: ")
+        choice = input("Select order type (1 or 2): ").strip()
 
         if choice == "1":
             order_type = "Dine-in"
@@ -76,5 +76,5 @@ def get_order_type():
             order_type = "Takeaway"
             break
         else:
-            print("Invalid choice. Please enter 1 or 2.")
+            print("Invalid input. Please enter 1 or 2.")
 
