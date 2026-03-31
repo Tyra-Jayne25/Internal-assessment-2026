@@ -119,7 +119,7 @@ def take_order(): # allow customer to select items and quantities for their orde
                     print("Invalid input. Please enter a whole number.")
                     continue
 
-                if quantity < 0 or quantity > MAX_ITEM_QUANITITY:
+                if quantity < 0 or quantity > MAX_ITEM_QUANTITY:
                     print(f"Please enter a number between 0 and {MAX_ITEM_QUANTITY}.")
                     continue
                 if quantity > 0:
