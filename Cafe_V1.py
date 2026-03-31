@@ -33,7 +33,7 @@ MENU_ITEMS = {
 }
 
 MAX_TABLES = 10
-MAX_ITEM_QUANITITY = 5 
+MAX_ITEM_QUANTITY = 5 
 
 # ===== GLOBAL VARIABLES =====
 available_tables = set(range(1, MAX_TABLES + 1 ))
@@ -120,10 +120,10 @@ def take_order(): # allow customer to select items and quantities for their orde
                     continue
 
                 if quantity < 0 or quantity > MAX_ITEM_QUANITITY:
-                    print(f"Please enter a number between 0 and {MAX_ITEM_QUANITITY}.")
+                    print(f"Please enter a number between 0 and {MAX_ITEM_QUANTITY}.")
                     continue
                 if quantity > 0:
-                    current_order[item] = {"quanitity": quantity, "price": price}
+                    current_order[item] = {"quantity": quantity, "price": price}
                 break
 
 def display_order_summary(): #display itemised order summary with total cost
@@ -138,7 +138,7 @@ def display_order_summary(): #display itemised order summary with total cost
     total_cost = 0
     
     for item, details in current_order.items():
-        quantity = details["quanitity"]
+        quantity = details["quantity"]
         price = details["price"]
         item_total = quantity * price
         total_cost += item_total
@@ -214,8 +214,9 @@ def reset_order():
 
 #Main program loop
 def start_system():
-    print("Cafe Ordering System")
-    print("=====================")
+    print("=====================================")
+    print("Welcome to the Cafe Ordering System!")
+    print("=====================================")  
 
     while True:
         print("\nMAIN MENU:")
