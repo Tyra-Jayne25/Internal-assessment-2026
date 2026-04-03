@@ -1,4 +1,4 @@
-# Cafe Ordering System - Basic Functionality
+# Cafe Ordering System - Basic GUI input and output, with improved user experience and error handling
 
 # ===== CONSTANTS =====
 MENU_ITEMS = {
