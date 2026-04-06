@@ -42,6 +42,8 @@ WIDTH, HEIGHT = 900, 600
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 BLUE = (70, 130, 180)
+GREEN = (0, 180, 0)
+RED = (200, 0, 0)
 
 font_large = pygame.font.Font(None, 60)
 font_medium = pygame.font.Font(None, 40)
