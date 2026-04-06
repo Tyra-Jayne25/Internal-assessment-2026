@@ -170,7 +170,7 @@ while running:
 
             if current_screen == "main_menu":
                 if button_start.collidepoint(event.pos):
-                    print("Start New Order clicked (GUI not added yet)")
+                    current_screen = "menu"
                 if button_release.collidepoint(event.pos):
                     print("Release Table clicked (GUI not added yet)")
                 if button_quit.collidepoint(event.pos):
