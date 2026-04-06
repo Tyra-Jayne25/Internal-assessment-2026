@@ -144,6 +144,7 @@ def draw_button(text, x, y, w, h):
     return pygame.Rect(x, y, w, h)
 
 # GUI MAIN LOOP
+# GUI MAIN LOOP
 running = True
 button_positions = {}
 
@@ -154,9 +155,9 @@ while running:
         title = font_large.render("Cafe Ordering System", True, BLACK)
         screen.blit(title, (200, 50))
 
-        buttonn_start = draw_button("Start New Order", 300, 200, 250, 60)
-        buttonn_release = draw_button("Release Table", 300, 300, 250, 60)
-        buttonn_quit = draw_button("Quit", 300, 400, 250, 60)
+        button_start = draw_button("Start New Order", 300, 200, 250, 60)
+        button_release = draw_button("Release Table", 300, 300, 250, 60)
+        button_quit = draw_button("Quit", 300, 400, 250, 60)
 
     if current_screen == "menu":
         button_positions, button_back = display_menu()
@@ -168,15 +169,15 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN:
 
             if current_screen == "main_menu":
-                if buttonn_start.collidepoint(event.pos):
-                    current_screen = "menu"
-                if buttonn_release.collidepoint(event.pos):
+                if button_start.collidepoint(event.pos):
+                    print("Start New Order clicked (GUI not added yet)")
+                if button_release.collidepoint(event.pos):
                     print("Release Table clicked (GUI not added yet)")
-                if buttonn_quit.collidepoint(event.pos):
+                if button_quit.collidepoint(event.pos):
                     running = False
 
             if current_screen == "menu":
-                if button_back.collidepoint(event.pos):
+                if button_start.collidepoint(event.pos):
                     current_screen = "main_menu"
 
                 for item, (plus_rect, minus_rect) in button_positions.items():
