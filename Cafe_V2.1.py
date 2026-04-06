@@ -78,7 +78,7 @@ def reset_order():
 
 # ===== GUI SETUP =====
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Cafe Ordering System")
+pygame.display.set_caption("Cafe Ordering System - Version 2.1")
 
 # ===== DRAW BUTTON =====
 def draw_button(text, x, y, w, h, color=BLUE):
