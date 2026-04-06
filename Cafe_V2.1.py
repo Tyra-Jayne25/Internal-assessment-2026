@@ -145,11 +145,6 @@ def draw_button(text, x, y, w, h):
 
 # GUI MAIN LOOP
 running = True
-while running:
-    screen.fill(WHITE)
-
-    # MAIN MENU SCREEN
-    running = True
 button_positions = {}
 
 while running:
@@ -159,12 +154,12 @@ while running:
         title = font_large.render("Cafe Ordering System", True, BLACK)
         screen.blit(title, (200, 50))
 
-        btn_start = draw_button("Start New Order", 300, 200, 250, 60)
-        btn_release = draw_button("Release Table", 300, 300, 250, 60)
-        btn_quit = draw_button("Quit", 300, 400, 250, 60)
+        buttonn_start = draw_button("Start New Order", 300, 200, 250, 60)
+        buttonn_release = draw_button("Release Table", 300, 300, 250, 60)
+        buttonn_quit = draw_button("Quit", 300, 400, 250, 60)
 
     if current_screen == "menu":
-        button_positions, btn_back = display_menu()
+        button_positions, button_back = display_menu()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -173,15 +168,15 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN:
 
             if current_screen == "main_menu":
-                if btn_start.collidepoint(event.pos):
+                if buttonn_start.collidepoint(event.pos):
                     current_screen = "menu"
-                if btn_release.collidepoint(event.pos):
+                if buttonn_release.collidepoint(event.pos):
                     print("Release Table clicked (GUI not added yet)")
-                if btn_quit.collidepoint(event.pos):
+                if buttonn_quit.collidepoint(event.pos):
                     running = False
 
             if current_screen == "menu":
-                if btn_back.collidepoint(event.pos):
+                if button_back.collidepoint(event.pos):
                     current_screen = "main_menu"
 
                 for item, (plus_rect, minus_rect) in button_positions.items():
@@ -193,5 +188,3 @@ while running:
                         take_order(item, increase=False)
 
     pygame.display.update()
-
-pygame.quit()
