@@ -125,7 +125,7 @@ def draw_ordering_screen(category):
         screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (370, y))
 
         qty = current_order.get(item, 0)
-        screen.blit(font_small.render(str(qty), True, BLACK), (455, y))
+        screen.blit(font_small.render(str(qty), True, BLACK), (464, y))
 
         minus = pygame.Rect(430, y, 24, 24)
         plus = pygame.Rect(485, y, 24, 24)
