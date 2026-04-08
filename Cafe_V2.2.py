@@ -15,10 +15,9 @@ font_large = pygame.font.Font(None, 60)
 font_medium = pygame.font.Font(None, 40)
 font_small = pygame.font.Font(None, 30)
 
-MAX_TABLES = 10
 MAX_ITEM_QUANTITY = 5
 
-# ===== ORIGINAL MENU ITEMS (REORGANISED INTO CATEGORIES) =====
+# ===== MENU =====
 MENU = {
     "Beverages": {
         "Cold Drinks": {
@@ -55,15 +54,11 @@ MENU = {
 }
 
 # ===== GLOBAL VARIABLES =====
-available_tables = set(range(1, MAX_TABLES + 1))
 current_order = {}
 current_screen = "main_menu"
-current_category = "Beverages"
-order_type = None
-customer_name = None
-table_number = None
+current_category = "Beverages"   # Default when entering ordering screen
 
-# ===== PLACEHOLDER FUNCTIONS (KEEPING THESE EXACTLY AS YOU SAID) =====
+# ===== PLACEHOLDER FUNCTIONS (KEEP FOR LATER VERSIONS) =====
 def get_order_type(): pass
 def get_dine_in_table(): pass
 def get_customer_name(): pass
@@ -73,17 +68,12 @@ def release_table(): pass
 def process_order(): pass
 
 def reset_order():
-    global current_order, current_screen, current_category, order_type, customer_name, table_number
+    global current_order
     current_order = {}
-    current_screen = "main_menu"
-    current_category = "Beverages"
-    order_type = None
-    customer_name = None
-    table_number = None
 
 # ===== GUI SETUP =====
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Cafe Ordering System - Version 2.1")
+pygame.display.set_caption("Cafe Ordering System - Version 2.2")
 
 # ===== DRAW BUTTON =====
 def draw_button(text, x, y, w, h, color=BLUE):
@@ -92,37 +82,41 @@ def draw_button(text, x, y, w, h, color=BLUE):
     screen.blit(label, (x + 10, y + 10))
     return pygame.Rect(x, y, w, h)
 
-# ===== SIDEBAR (LEFT CATEGORY LIST) =====
-def draw_sidebar():
+# ===== SIDEBAR =====
+def draw_sidebar(selected):
     pygame.draw.rect(screen, GREY, (0, 0, 200, HEIGHT))
-    title = font_medium.render("CATEGORIES", True, BLACK)
-    screen.blit(title, (20, 20))
 
-    beverages_colour = BLUE_DARK if current_category == "Beverages" else BLUE
-    food_colour = BLUE_DARK if current_category == "Food" else BLUE
+    bev_color = BLUE_DARK if selected == "Beverages" else BLUE
+    food_color = BLUE_DARK if selected == "Food" else BLUE
 
-    button_beverages = draw_button("Beverages", 20, 80, 160, 60, beverages_colour)
-    button_food = draw_button("Food", 20, 160, 160, 60, food_colour)
+    button_bev = draw_button("Beverages", 20, 80, 160, 60, bev_color)
+    button_food = draw_button("Food", 20, 160, 160, 60, food_color)
 
-    return button_beverages, button_food
+    return button_bev, button_food
 
-# ===== SUBCATEGORY + ITEM SCREEN =====
-def draw_subcategory_screen(category):
+# ===== ORDERING SCREEN =====
+def draw_ordering_screen(category):
     screen.fill(WHITE)
-    button_bev, button_food = draw_sidebar()
 
+    # Top bar
+    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
+    screen.blit(font_medium.render("Cafe Name", True, WHITE), (20, 10))
+
+    # Sidebar
+    button_bev, button_food = draw_sidebar(category)
+
+    # Subcategories
     subcats = list(MENU[category].keys())
     left_sub = subcats[0]
     right_sub = subcats[1]
 
-    # Titles
-    screen.blit(font_medium.render(left_sub, True, BLACK), (250, 40))
-    screen.blit(font_medium.render(right_sub, True, BLACK), (600, 40))
+    screen.blit(font_medium.render(left_sub, True, BLACK), (250, 80))
+    screen.blit(font_medium.render(right_sub, True, BLACK), (600, 80))
 
     button_positions = {}
 
     # LEFT COLUMN
-    y = 100
+    y = 140
     for item, price in MENU[category][left_sub].items():
         screen.blit(font_small.render(f"{item} - £{price:.2f}", True, BLACK), (250, y))
 
@@ -141,7 +135,7 @@ def draw_subcategory_screen(category):
         y += 50
 
     # RIGHT COLUMN
-    y = 100
+    y = 140
     for item, price in MENU[category][right_sub].items():
         screen.blit(font_small.render(f"{item} - £{price:.2f}", True, BLACK), (600, y))
 
@@ -159,70 +153,121 @@ def draw_subcategory_screen(category):
         button_positions[item] = (plus, minus)
         y += 50
 
-    button_back = draw_button("Back", 250, 550, 150, 50)
+    # Bottom bar
+    pygame.draw.rect(screen, BLUE, (0, HEIGHT - 80, WIDTH, 80))
 
-    return button_bev, button_food, button_back, button_positions
+    total_cost = sum(MENU[cat][sub][item] * qty
+                     for cat in MENU
+                     for sub in MENU[cat]
+                     for item, qty in current_order.items()
+                     if item in MENU[cat][sub])
+
+    screen.blit(font_medium.render(f"Cost: £{total_cost:.2f}", True, WHITE), (20, HEIGHT - 60))
+
+    see_order_btn = draw_button("See Order", 300, HEIGHT - 70, 150, 50)
+    cancel_btn = draw_button("Cancel Order", 500, HEIGHT - 70, 150, 50)
+    complete_btn = draw_button("Complete Order", 700, HEIGHT - 70, 180, 50)
+
+    return button_bev, button_food, see_order_btn, cancel_btn, complete_btn, button_positions
+
+# ===== ORDER SUMMARY SCREEN =====
+def draw_order_summary():
+    screen.fill(WHITE)
+
+    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
+    screen.blit(font_medium.render("Order Summary", True, WHITE), (20, 10))
+
+    y = 120
+    for item, qty in current_order.items():
+        price = None
+        for cat in MENU:
+            for sub in MENU[cat]:
+                if item in MENU[cat][sub]:
+                    price = MENU[cat][sub][item]
+
+        screen.blit(font_medium.render(f"{item} x{qty} - £{price * qty:.2f}", True, BLACK), (50, y))
+        y += 40
+
+    total_cost = sum(
+        MENU[cat][sub][item] * qty
+        for cat in MENU
+        for sub in MENU[cat]
+        for item, qty in current_order.items()
+        if item in MENU[cat][sub]
+    )
+
+    screen.blit(font_medium.render(f"Total: £{total_cost:.2f}", True, BLACK), (50, HEIGHT - 150))
+
+    back_btn = draw_button("Back", 50, HEIGHT - 80, 150, 50)
+    return back_btn
 
 # ===== MAIN LOOP =====
 running = True
-current_screen = "main_menu"
-current_category = None
 
 while running:
     screen.fill(WHITE)
 
-    # MAIN MENU
-    if current_screen == "main_menu":
-        title = font_large.render("Cafe Ordering System", True, BLACK)
-        screen.blit(title, (250, 150))
-
-        button_start = draw_button("Start New Order", 350, 300, 300, 70)
-        button_release = draw_button("Release Table", 350, 380, 300, 70)
-        button_quit = draw_button("Quit", 350, 460, 300, 70)
-
-    # CATEGORY SELECT SCREEN
-    elif current_screen == "category_select":
-        button_bev, button_food = draw_sidebar()
-
-    # SUBCATEGORY SCREEN
-    elif current_screen == "subcategory":
-        button_bev, button_food, button_back, button_positions = draw_subcategory_screen(current_category)
-
-    # ===== EVENT HANDLING =====
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
         if event.type == pygame.MOUSEBUTTONDOWN:
 
+            # MAIN MENU
             if current_screen == "main_menu":
-                if button_start.collidepoint(event.pos):
-                    current_screen = "category_select"
+                button_start = draw_button("Start New Order", 350, 300, 300, 70)
+                button_release = draw_button("Release Table", 350, 380, 300, 70)
+                button_quit = draw_button("Quit", 350, 460, 300, 70)
 
-                if button_release.collidepoint(event.pos):
-                    print("Release Table clicked (GUI coming in later versions)")
+                if button_start.collidepoint(event.pos):
+                    current_screen = "ordering"
 
                 if button_quit.collidepoint(event.pos):
                     running = False
 
-            elif current_screen == "category_select":
+            # ORDERING SCREEN
+            elif current_screen == "ordering":
+                button_bev, button_food, see_order_btn, cancel_btn, complete_btn, button_positions = draw_ordering_screen(current_category)
+
                 if button_bev.collidepoint(event.pos):
                     current_category = "Beverages"
-                    current_screen = "subcategory"
+
                 if button_food.collidepoint(event.pos):
                     current_category = "Food"
-                    current_screen = "subcategory"
 
-            elif current_screen == "subcategory":
-                if button_back.collidepoint(event.pos):
-                    current_screen = "category_select"
+                if see_order_btn.collidepoint(event.pos):
+                    current_screen = "order_summary"
 
-                # Handle + and - buttons
+                if cancel_btn.collidepoint(event.pos):
+                    reset_order()
+                    current_screen = "main_menu"
+
+                # Handle + and -
                 for item, (plus, minus) in button_positions.items():
                     if plus.collidepoint(event.pos):
                         current_order[item] = min(current_order.get(item, 0) + 1, MAX_ITEM_QUANTITY)
                     if minus.collidepoint(event.pos):
                         current_order[item] = max(current_order.get(item, 0) - 1, 0)
+
+            # ORDER SUMMARY
+            elif current_screen == "order_summary":
+                back_btn = draw_order_summary()
+                if back_btn.collidepoint(event.pos):
+                    current_screen = "ordering"
+
+    # Draw screens
+    if current_screen == "main_menu":
+        title = font_large.render("Cafe Ordering System", True, BLACK)
+        screen.blit(title, (250, 150))
+        draw_button("Start New Order", 350, 300, 300, 70)
+        draw_button("Release Table", 350, 380, 300, 70)
+        draw_button("Quit", 350, 460, 300, 70)
+
+    elif current_screen == "ordering":
+        draw_ordering_screen(current_category)
+
+    elif current_screen == "order_summary":
+        draw_order_summary()
 
     pygame.display.update()
 
