@@ -107,57 +107,71 @@ def draw_ordering_screen(category):
     # Sidebar
     button_bev, button_food = draw_sidebar(category)
 
-    # Subcategories
+    # Subcategory titles
     subcats = list(MENU[category].keys())
     left_sub = subcats[0]
     right_sub = subcats[1]
 
-    screen.blit(font_medium.render(left_sub, True, BLACK), (250, 80))
-    screen.blit(font_medium.render(right_sub, True, BLACK), (600, 80))
+    screen.blit(font_medium.render(left_sub, True, BLACK), (230, 80))
+    screen.blit(font_medium.render(right_sub, True, BLACK), (530, 80))
 
     button_positions = {}
 
-    # LEFT COLUMN — FIXED SPACING
+    # ===== LEFT COLUMN (TIGHT SPACING) =====
     y = 140
     for item, price in MENU[category][left_sub].items():
-        screen.blit(font_small.render(item, True, BLACK), (250, y))
-        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (480, y))
 
+        # Item name
+        screen.blit(font_small.render(item, True, BLACK), (230, y))
+
+        # Price close to item
+        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (360, y))
+
+        # Quantity close to price
         qty = current_order.get(item, 0)
-        screen.blit(font_small.render(str(qty), True, BLACK), (680, y))
+        screen.blit(font_small.render(str(qty), True, BLACK), (430, y))
 
-        minus = pygame.Rect(640, y, 30, 30)
-        plus = pygame.Rect(720, y, 30, 30)
+        # Buttons close to quantity
+        minus = pygame.Rect(405, y, 22, 22)
+        plus = pygame.Rect(455, y, 22, 22)
 
         pygame.draw.rect(screen, RED, minus)
         pygame.draw.rect(screen, GREEN, plus)
-        screen.blit(font_small.render("-", True, WHITE), (648, y))
-        screen.blit(font_small.render("+", True, WHITE), (728, y))
+
+        screen.blit(font_small.render("-", True, WHITE), (410, y))
+        screen.blit(font_small.render("+", True, WHITE), (460, y))
 
         button_positions[item] = (plus, minus)
-        y += 60  # MORE VERTICAL SPACING
+        y += 40
 
-    # RIGHT COLUMN — FIXED SPACING
+    # ===== RIGHT COLUMN (TIGHT SPACING) =====
     y = 140
     for item, price in MENU[category][right_sub].items():
-        screen.blit(font_small.render(item, True, BLACK), (600, y))
-        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (830, y))
 
+        # Item name
+        screen.blit(font_small.render(item, True, BLACK), (530, y))
+
+        # Price close to item
+        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (660, y))
+
+        # Quantity close to price
         qty = current_order.get(item, 0)
-        screen.blit(font_small.render(str(qty), True, BLACK), (1030, y))
+        screen.blit(font_small.render(str(qty), True, BLACK), (730, y))
 
-        minus = pygame.Rect(990, y, 30, 30)
-        plus = pygame.Rect(1070, y, 30, 30)
+        # Buttons close to quantity
+        minus = pygame.Rect(705, y, 22, 22)
+        plus = pygame.Rect(755, y, 22, 22)
 
         pygame.draw.rect(screen, RED, minus)
         pygame.draw.rect(screen, GREEN, plus)
-        screen.blit(font_small.render("-", True, WHITE), (998, y))
-        screen.blit(font_small.render("+", True, WHITE), (1078, y))
+
+        screen.blit(font_small.render("-", True, WHITE), (710, y))
+        screen.blit(font_small.render("+", True, WHITE), (760, y))
 
         button_positions[item] = (plus, minus)
-        y += 60  # MORE VERTICAL SPACING
+        y += 40
 
-    # Bottom bar
+    # ===== BOTTOM BAR (YOU SAID THIS IS GOOD) =====
     pygame.draw.rect(screen, BLUE, (0, HEIGHT - 80, WIDTH, 80))
 
     total_cost = sum(
@@ -170,7 +184,6 @@ def draw_ordering_screen(category):
 
     screen.blit(font_medium.render(f"Cost: £{total_cost:.2f}", True, WHITE), (20, HEIGHT - 60))
 
-    # FIXED BUTTONS — NOW BIGGER
     see_order_btn = draw_button("See Order", 260, HEIGHT - 72, 200, 55, BLUE_DARK)
     cancel_btn = draw_button("Cancel Order", 480, HEIGHT - 72, 200, 55, BLUE_DARK)
     complete_btn = draw_button("Complete Order", 700, HEIGHT - 72, 230, 55, BLUE_DARK)
@@ -181,18 +194,14 @@ def draw_ordering_screen(category):
 def draw_order_summary():
     screen.fill(WHITE)
 
-    # Top bar
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
     screen.blit(font_medium.render("ORDER", True, WHITE), (20, 10))
 
-    # BIG BOX
     box = pygame.Rect(50, 100, 900, 450)
     pygame.draw.rect(screen, LIGHT_GREY, box)
 
-    # Filter out items with qty 0
     filtered_items = [(item, qty) for item, qty in current_order.items() if qty > 0]
 
-    # Two-column layout
     col1_x = 80
     col2_x = 500
     y = 140
@@ -214,7 +223,6 @@ def draw_order_summary():
 
         count += 1
 
-    # Total cost BELOW the box
     total_cost = sum(
         MENU[cat][sub][item] * qty
         for cat in MENU
@@ -240,7 +248,6 @@ while running:
 
         if event.type == pygame.MOUSEBUTTONDOWN:
 
-            # MAIN MENU
             if current_screen == "main_menu":
                 button_start = draw_button("Start New Order", 350, 300, 300, 70)
                 button_release = draw_button("Release Table", 350, 380, 300, 70)
@@ -252,7 +259,6 @@ while running:
                 if button_quit.collidepoint(event.pos):
                     running = False
 
-            # ORDERING SCREEN
             elif current_screen == "ordering":
                 button_bev, button_food, see_order_btn, cancel_btn, complete_btn, button_positions = draw_ordering_screen(current_category)
 
@@ -269,20 +275,17 @@ while running:
                     reset_order()
                     current_screen = "main_menu"
 
-                # Handle + and -
                 for item, (plus, minus) in button_positions.items():
                     if plus.collidepoint(event.pos):
                         current_order[item] = min(current_order.get(item, 0) + 1, MAX_ITEM_QUANTITY)
                     if minus.collidepoint(event.pos):
                         current_order[item] = max(current_order.get(item, 0) - 1, 0)
 
-            # ORDER SUMMARY
             elif current_screen == "order_summary":
                 back_btn = draw_order_summary()
                 if back_btn.collidepoint(event.pos):
                     current_screen = "ordering"
 
-    # Draw screens
     if current_screen == "main_menu":
         title = font_large.render("Cafe Ordering System", True, BLACK)
         screen.blit(title, (250, 150))
@@ -299,3 +302,4 @@ while running:
     pygame.display.update()
 
 pygame.quit()
+
