@@ -117,61 +117,51 @@ def draw_ordering_screen(category):
 
     button_positions = {}
 
-    # ===== LEFT COLUMN (TIGHT SPACING) =====
+    # ===== LEFT COLUMN (SLIGHTLY LOOSER SPACING) =====
     y = 140
     for item, price in MENU[category][left_sub].items():
 
-        # Item name
         screen.blit(font_small.render(item, True, BLACK), (230, y))
+        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (370, y))
 
-        # Price close to item
-        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (360, y))
-
-        # Quantity close to price
         qty = current_order.get(item, 0)
-        screen.blit(font_small.render(str(qty), True, BLACK), (430, y))
+        screen.blit(font_small.render(str(qty), True, BLACK), (455, y))
 
-        # Buttons close to quantity
-        minus = pygame.Rect(405, y, 22, 22)
-        plus = pygame.Rect(455, y, 22, 22)
+        minus = pygame.Rect(430, y, 24, 24)
+        plus = pygame.Rect(485, y, 24, 24)
 
         pygame.draw.rect(screen, RED, minus)
         pygame.draw.rect(screen, GREEN, plus)
 
-        screen.blit(font_small.render("-", True, WHITE), (410, y))
-        screen.blit(font_small.render("+", True, WHITE), (460, y))
+        screen.blit(font_small.render("-", True, WHITE), (436, y))
+        screen.blit(font_small.render("+", True, WHITE), (491, y))
 
         button_positions[item] = (plus, minus)
-        y += 40
+        y += 45
 
-    # ===== RIGHT COLUMN (TIGHT SPACING) =====
+    # ===== RIGHT COLUMN (SLIGHTLY LOOSER SPACING) =====
     y = 140
     for item, price in MENU[category][right_sub].items():
 
-        # Item name
         screen.blit(font_small.render(item, True, BLACK), (530, y))
+        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (670, y))
 
-        # Price close to item
-        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (660, y))
-
-        # Quantity close to price
         qty = current_order.get(item, 0)
-        screen.blit(font_small.render(str(qty), True, BLACK), (730, y))
+        screen.blit(font_small.render(str(qty), True, BLACK), (755, y))
 
-        # Buttons close to quantity
-        minus = pygame.Rect(705, y, 22, 22)
-        plus = pygame.Rect(755, y, 22, 22)
+        minus = pygame.Rect(730, y, 24, 24)
+        plus = pygame.Rect(785, y, 24, 24)
 
         pygame.draw.rect(screen, RED, minus)
         pygame.draw.rect(screen, GREEN, plus)
 
-        screen.blit(font_small.render("-", True, WHITE), (710, y))
-        screen.blit(font_small.render("+", True, WHITE), (760, y))
+        screen.blit(font_small.render("-", True, WHITE), (736, y))
+        screen.blit(font_small.render("+", True, WHITE), (791, y))
 
         button_positions[item] = (plus, minus)
-        y += 40
+        y += 45
 
-    # ===== BOTTOM BAR (YOU SAID THIS IS GOOD) =====
+    # ===== BOTTOM BAR (UNCHANGED — YOU SAID IT’S GOOD) =====
     pygame.draw.rect(screen, BLUE, (0, HEIGHT - 80, WIDTH, 80))
 
     total_cost = sum(
@@ -302,4 +292,3 @@ while running:
     pygame.display.update()
 
 pygame.quit()
-
