@@ -80,7 +80,8 @@ pygame.display.set_caption("Cafe Ordering System - Version 2.3")
 def draw_button(text, x, y, w, h, color=BLUE):
     pygame.draw.rect(screen, color, (x, y, w, h))
     label = font_medium.render(text, True, WHITE)
-    screen.blit(label, (x + (w - label.get_width()) // 2, y + 10))
+    screen.blit(label, (x + (w - label.get_width()) // 2,
+                        y + (h - label.get_height()) // 2))
     return pygame.Rect(x, y, w, h)
 
 # ===== SIDEBAR =====
@@ -116,45 +117,45 @@ def draw_ordering_screen(category):
 
     button_positions = {}
 
-    # LEFT COLUMN
+    # LEFT COLUMN — FIXED SPACING
     y = 140
     for item, price in MENU[category][left_sub].items():
-        screen.blit(font_small.render(f"{item}", True, BLACK), (250, y))
-        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (420, y))
+        screen.blit(font_small.render(item, True, BLACK), (250, y))
+        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (480, y))
 
         qty = current_order.get(item, 0)
-        screen.blit(font_small.render(str(qty), True, BLACK), (560, y))
+        screen.blit(font_small.render(str(qty), True, BLACK), (680, y))
 
-        minus = pygame.Rect(520, y, 30, 30)
-        plus = pygame.Rect(600, y, 30, 30)
+        minus = pygame.Rect(640, y, 30, 30)
+        plus = pygame.Rect(720, y, 30, 30)
 
         pygame.draw.rect(screen, RED, minus)
         pygame.draw.rect(screen, GREEN, plus)
-        screen.blit(font_small.render("-", True, WHITE), (528, y))
-        screen.blit(font_small.render("+", True, WHITE), (608, y))
+        screen.blit(font_small.render("-", True, WHITE), (648, y))
+        screen.blit(font_small.render("+", True, WHITE), (728, y))
 
         button_positions[item] = (plus, minus)
-        y += 50
+        y += 60  # MORE VERTICAL SPACING
 
-    # RIGHT COLUMN
+    # RIGHT COLUMN — FIXED SPACING
     y = 140
     for item, price in MENU[category][right_sub].items():
-        screen.blit(font_small.render(f"{item}", True, BLACK), (600, y))
-        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (770, y))
+        screen.blit(font_small.render(item, True, BLACK), (600, y))
+        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (830, y))
 
         qty = current_order.get(item, 0)
-        screen.blit(font_small.render(str(qty), True, BLACK), (910, y))
+        screen.blit(font_small.render(str(qty), True, BLACK), (1030, y))
 
-        minus = pygame.Rect(870, y, 30, 30)
-        plus = pygame.Rect(950, y, 30, 30)
+        minus = pygame.Rect(990, y, 30, 30)
+        plus = pygame.Rect(1070, y, 30, 30)
 
         pygame.draw.rect(screen, RED, minus)
         pygame.draw.rect(screen, GREEN, plus)
-        screen.blit(font_small.render("-", True, WHITE), (878, y))
-        screen.blit(font_small.render("+", True, WHITE), (958, y))
+        screen.blit(font_small.render("-", True, WHITE), (998, y))
+        screen.blit(font_small.render("+", True, WHITE), (1078, y))
 
         button_positions[item] = (plus, minus)
-        y += 50
+        y += 60  # MORE VERTICAL SPACING
 
     # Bottom bar
     pygame.draw.rect(screen, BLUE, (0, HEIGHT - 80, WIDTH, 80))
@@ -169,10 +170,10 @@ def draw_ordering_screen(category):
 
     screen.blit(font_medium.render(f"Cost: £{total_cost:.2f}", True, WHITE), (20, HEIGHT - 60))
 
-    # FIXED BUTTONS (now visible boxes)
-    see_order_btn = draw_button("See Order", 300, HEIGHT - 70, 150, 50, BLUE_DARK)
-    cancel_btn = draw_button("Cancel Order", 500, HEIGHT - 70, 150, 50, BLUE_DARK)
-    complete_btn = draw_button("Complete Order", 700, HEIGHT - 70, 180, 50, BLUE_DARK)
+    # FIXED BUTTONS — NOW BIGGER
+    see_order_btn = draw_button("See Order", 260, HEIGHT - 72, 200, 55, BLUE_DARK)
+    cancel_btn = draw_button("Cancel Order", 480, HEIGHT - 72, 200, 55, BLUE_DARK)
+    complete_btn = draw_button("Complete Order", 700, HEIGHT - 72, 230, 55, BLUE_DARK)
 
     return button_bev, button_food, see_order_btn, cancel_btn, complete_btn, button_positions
 
@@ -184,7 +185,7 @@ def draw_order_summary():
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
     screen.blit(font_medium.render("ORDER", True, WHITE), (20, 10))
 
-    # BIG white box
+    # BIG BOX
     box = pygame.Rect(50, 100, 900, 450)
     pygame.draw.rect(screen, LIGHT_GREY, box)
 
