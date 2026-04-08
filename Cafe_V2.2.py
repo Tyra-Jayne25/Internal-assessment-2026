@@ -10,6 +10,7 @@ BLUE_DARK = (40, 90, 140)
 GREEN = (0, 180, 0)
 RED = (200, 0, 0)
 GREY = (220, 220, 220)
+LIGHT_GREY = (240, 240, 240)
 
 font_large = pygame.font.Font(None, 60)
 font_medium = pygame.font.Font(None, 40)
@@ -56,9 +57,9 @@ MENU = {
 # ===== GLOBAL VARIABLES =====
 current_order = {}
 current_screen = "main_menu"
-current_category = "Beverages"   # Default when entering ordering screen
+current_category = "Beverages"
 
-# ===== PLACEHOLDER FUNCTIONS (KEEP FOR LATER VERSIONS) =====
+# ===== PLACEHOLDER FUNCTIONS =====
 def get_order_type(): pass
 def get_dine_in_table(): pass
 def get_customer_name(): pass
@@ -73,13 +74,13 @@ def reset_order():
 
 # ===== GUI SETUP =====
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Cafe Ordering System - Version 2.2")
+pygame.display.set_caption("Cafe Ordering System - Version 2.3")
 
 # ===== DRAW BUTTON =====
 def draw_button(text, x, y, w, h, color=BLUE):
-    pygame.draw.rect(screen, color, (x, y, w, h))
+    pygame.draw.rect(screen, color, (x, y, w, h), border_radius=8)
     label = font_medium.render(text, True, WHITE)
-    screen.blit(label, (x + 10, y + 10))
+    screen.blit(label, (x + (w - label.get_width()) // 2, y + 10))
     return pygame.Rect(x, y, w, h)
 
 # ===== SIDEBAR =====
@@ -118,18 +119,19 @@ def draw_ordering_screen(category):
     # LEFT COLUMN
     y = 140
     for item, price in MENU[category][left_sub].items():
-        screen.blit(font_small.render(f"{item} - £{price:.2f}", True, BLACK), (250, y))
+        screen.blit(font_small.render(f"{item}", True, BLACK), (250, y))
+        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (400, y))
 
         qty = current_order.get(item, 0)
-        screen.blit(font_small.render(str(qty), True, BLACK), (480, y))
+        screen.blit(font_small.render(str(qty), True, BLACK), (520, y))
 
-        minus = pygame.Rect(440, y, 30, 30)
-        plus = pygame.Rect(520, y, 30, 30)
+        minus = pygame.Rect(480, y, 30, 30)
+        plus = pygame.Rect(560, y, 30, 30)
 
         pygame.draw.rect(screen, RED, minus)
         pygame.draw.rect(screen, GREEN, plus)
-        screen.blit(font_small.render("-", True, WHITE), (448, y))
-        screen.blit(font_small.render("+", True, WHITE), (528, y))
+        screen.blit(font_small.render("-", True, WHITE), (488, y))
+        screen.blit(font_small.render("+", True, WHITE), (568, y))
 
         button_positions[item] = (plus, minus)
         y += 50
@@ -137,18 +139,19 @@ def draw_ordering_screen(category):
     # RIGHT COLUMN
     y = 140
     for item, price in MENU[category][right_sub].items():
-        screen.blit(font_small.render(f"{item} - £{price:.2f}", True, BLACK), (600, y))
+        screen.blit(font_small.render(f"{item}", True, BLACK), (600, y))
+        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (750, y))
 
         qty = current_order.get(item, 0)
-        screen.blit(font_small.render(str(qty), True, BLACK), (830, y))
+        screen.blit(font_small.render(str(qty), True, BLACK), (870, y))
 
-        minus = pygame.Rect(790, y, 30, 30)
-        plus = pygame.Rect(870, y, 30, 30)
+        minus = pygame.Rect(830, y, 30, 30)
+        plus = pygame.Rect(910, y, 30, 30)
 
         pygame.draw.rect(screen, RED, minus)
         pygame.draw.rect(screen, GREEN, plus)
-        screen.blit(font_small.render("-", True, WHITE), (798, y))
-        screen.blit(font_small.render("+", True, WHITE), (878, y))
+        screen.blit(font_small.render("-", True, WHITE), (838, y))
+        screen.blit(font_small.render("+", True, WHITE), (918, y))
 
         button_positions[item] = (plus, minus)
         y += 50
@@ -156,11 +159,13 @@ def draw_ordering_screen(category):
     # Bottom bar
     pygame.draw.rect(screen, BLUE, (0, HEIGHT - 80, WIDTH, 80))
 
-    total_cost = sum(MENU[cat][sub][item] * qty
-                     for cat in MENU
-                     for sub in MENU[cat]
-                     for item, qty in current_order.items()
-                     if item in MENU[cat][sub])
+    total_cost = sum(
+        MENU[cat][sub][item] * qty
+        for cat in MENU
+        for sub in MENU[cat]
+        for item, qty in current_order.items()
+        if item in MENU[cat][sub]
+    )
 
     screen.blit(font_medium.render(f"Cost: £{total_cost:.2f}", True, WHITE), (20, HEIGHT - 60))
 
@@ -174,20 +179,40 @@ def draw_ordering_screen(category):
 def draw_order_summary():
     screen.fill(WHITE)
 
+    # Top bar
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
-    screen.blit(font_medium.render("Order Summary", True, WHITE), (20, 10))
+    screen.blit(font_medium.render("ORDER", True, WHITE), (20, 10))
 
-    y = 120
-    for item, qty in current_order.items():
+    # White box for order list
+    box = pygame.Rect(80, 100, 840, 450)
+    pygame.draw.rect(screen, LIGHT_GREY, box, border_radius=12)
+
+    # Filter out items with qty 0
+    filtered_items = [(item, qty) for item, qty in current_order.items() if qty > 0]
+
+    # Two-column layout
+    col1_x = 120
+    col2_x = 520
+    y = 140
+    count = 0
+
+    for item, qty in filtered_items:
         price = None
         for cat in MENU:
             for sub in MENU[cat]:
                 if item in MENU[cat][sub]:
                     price = MENU[cat][sub][item]
 
-        screen.blit(font_medium.render(f"{item} x{qty} - £{price * qty:.2f}", True, BLACK), (50, y))
-        y += 40
+        x = col1_x if count % 2 == 0 else col2_x
 
+        screen.blit(font_small.render(f"{item} x{qty} - £{price * qty:.2f}", True, BLACK), (x, y))
+
+        if count % 2 == 1:
+            y += 40
+
+        count += 1
+
+    # Total cost
     total_cost = sum(
         MENU[cat][sub][item] * qty
         for cat in MENU
@@ -196,9 +221,9 @@ def draw_order_summary():
         if item in MENU[cat][sub]
     )
 
-    screen.blit(font_medium.render(f"Total: £{total_cost:.2f}", True, BLACK), (50, HEIGHT - 150))
+    screen.blit(font_medium.render(f"Total: £{total_cost:.2f}", True, BLACK), (120, 500))
 
-    back_btn = draw_button("Back", 50, HEIGHT - 80, 150, 50)
+    back_btn = draw_button("Back", 120, 540, 150, 50)
     return back_btn
 
 # ===== MAIN LOOP =====
