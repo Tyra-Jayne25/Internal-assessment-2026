@@ -6,6 +6,7 @@ WIDTH, HEIGHT = 1000, 650
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 BLUE = (70, 130, 180)
+BLUE_DARK = (40, 90, 140)
 GREEN = (0, 180, 0)
 RED = (200, 0, 0)
 GREY = (220, 220, 220)
@@ -56,6 +57,8 @@ MENU = {
 # ===== GLOBAL VARIABLES =====
 available_tables = set(range(1, MAX_TABLES + 1))
 current_order = {}
+current_screen = "main_menu"
+current_category = "Beverages"
 order_type = None
 customer_name = None
 table_number = None
@@ -70,8 +73,10 @@ def release_table(): pass
 def process_order(): pass
 
 def reset_order():
-    global current_order, order_type, customer_name, table_number
+    global current_order, current_screen, current_category, order_type, customer_name, table_number
     current_order = {}
+    current_screen = "main_menu"
+    current_category = "Beverages"
     order_type = None
     customer_name = None
     table_number = None
@@ -93,10 +98,13 @@ def draw_sidebar():
     title = font_medium.render("CATEGORIES", True, BLACK)
     screen.blit(title, (20, 20))
 
-    button_bev = draw_button("Beverages", 20, 80, 160, 60)
-    button_food = draw_button("Food", 20, 160, 160, 60)
+    beverages_colour = BLUE_DARK if current_category == "Beverages" else BLUE
+    food_colour = BLUE_DARK if current_category == "Food" else BLUE
 
-    return button_bev, button_food
+    button_beverages = draw_button("Beverages", 20, 80, 160, 60, beverages_colour)
+    button_food = draw_button("Food", 20, 160, 160, 60, food_colour)
+
+    return button_beverages, button_food
 
 # ===== SUBCATEGORY + ITEM SCREEN =====
 def draw_subcategory_screen(category):
