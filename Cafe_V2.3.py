@@ -143,20 +143,20 @@ def draw_ordering_screen(category):
     y = 140
     for item, price in MENU[category][right_sub].items():
 
-        screen.blit(font_small.render(item, True, BLACK), (530, y))
-        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (670, y))
+        screen.blit(font_small.render(item, True, BLACK), (550, y))
+        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (700, y))
 
         qty = current_order.get(item, 0)
-        screen.blit(font_small.render(str(qty), True, BLACK), (755, y))
+        screen.blit(font_small.render(str(qty), True, BLACK), (790, y))
 
-        minus = pygame.Rect(730, y, 24, 24)
-        plus = pygame.Rect(785, y, 24, 24)
+        minus = pygame.Rect(760, y, 24, 24)
+        plus = pygame.Rect(810, y, 24, 24)
 
         pygame.draw.rect(screen, RED, minus)
         pygame.draw.rect(screen, GREEN, plus)
 
-        screen.blit(font_small.render("-", True, WHITE), (736, y))
-        screen.blit(font_small.render("+", True, WHITE), (791, y))
+        screen.blit(font_small.render("-", True, WHITE), (767, y))
+        screen.blit(font_small.render("+", True, WHITE), (816, y))
 
         button_positions[item] = (plus, minus)
         y += 45
