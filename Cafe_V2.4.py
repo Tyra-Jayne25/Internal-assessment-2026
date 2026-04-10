@@ -11,7 +11,7 @@ GREEN = (0, 180, 0)
 RED = (200, 0, 0)
 GREY = (220, 220, 220)
 LIGHT_GREY = (240, 240, 240)
-DARK_GREY = (180, 180, 180)
+DARK_GREY = (160, 160, 160)
 
 font_large = pygame.font.Font(None, 60)
 font_medium = pygame.font.Font(None, 40)
@@ -90,13 +90,13 @@ def draw_sidebar():
         x = 230
         y = 80
         for sub in MENU[current_category]:
-            rect = draw_button(sub, x, y, 200, 50, DARK_GREY)
+            rect = draw_button(sub, x, y, 180, 50, DARK_GREY)
             sub_buttons.append((sub, rect))
-            x += 220
+            x += 200
 
     return bev_btn, food_btn, sub_buttons
 
-# ===== ITEM GRID =====
+# ===== ITEM GRID (3 per row) =====
 def draw_item_grid():
     if not current_subcategory:
         return []
@@ -109,22 +109,22 @@ def draw_item_grid():
     count = 0
 
     for item, price in items.items():
-        box = pygame.Rect(x, y, 250, 150)
+        box = pygame.Rect(x, y, 200, 140)
         pygame.draw.rect(screen, LIGHT_GREY, box)
 
-        pygame.draw.rect(screen, GREY, (x + 10, y + 10, 80, 80))
+        pygame.draw.rect(screen, GREY, (x + 10, y + 10, 60, 60))
 
-        screen.blit(font_small.render(item, True, BLACK), (x + 100, y + 20))
-        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (x + 100, y + 60))
+        screen.blit(font_small.render(item, True, BLACK), (x + 80, y + 15))
+        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (x + 80, y + 50))
 
         item_boxes.append((item, box))
 
         count += 1
-        if count % 2 == 0:
+        if count % 3 == 0:
             x = 230
-            y += 170
+            y += 160
         else:
-            x += 300
+            x += 220
 
     return item_boxes
 
@@ -144,24 +144,31 @@ def draw_popup():
     pygame.draw.rect(screen, RED, close_btn)
     screen.blit(font_medium.render("X", True, WHITE), (700, 130))
 
-    screen.blit(font_medium.render(popup_item, True, BLACK), (300, 150))
+    # Centered name
+    name_label = font_medium.render(popup_item, True, BLACK)
+    screen.blit(name_label, (250 + (500 - name_label.get_width()) // 2, 150))
 
-    pygame.draw.rect(screen, GREY, (350, 200, 200, 150))
+    # Centered image placeholder
+    img_x = 250 + (500 - 200) // 2
+    pygame.draw.rect(screen, GREY, (img_x, 200, 200, 150))
 
     price = MENU[current_category][current_subcategory][popup_item]
-    screen.blit(font_small.render(f"Price: £{price:.2f}", True, BLACK), (300, 370))
+    price_label = font_small.render(f"Price: £{price:.2f}", True, BLACK)
+    screen.blit(price_label, (250 + (500 - price_label.get_width()) // 2, 360))
 
-    minus_btn = pygame.Rect(450, 360, 40, 40)
-    plus_btn = pygame.Rect(550, 360, 40, 40)
+    # Quantity controls centered
+    minus_btn = pygame.Rect(380, 390, 40, 40)
+    plus_btn = pygame.Rect(580, 390, 40, 40)
     pygame.draw.rect(screen, RED, minus_btn)
     pygame.draw.rect(screen, GREEN, plus_btn)
 
-    screen.blit(font_medium.render("-", True, WHITE), (462, 360))
-    screen.blit(font_medium.render("+", True, WHITE), (562, 360))
+    qty_label = font_medium.render(str(popup_qty), True, BLACK)
+    screen.blit(qty_label, (250 + (500 - qty_label.get_width()) // 2, 395))
 
-    screen.blit(font_medium.render(str(popup_qty), True, BLACK), (515, 365))
+    screen.blit(font_medium.render("-", True, WHITE), (390, 390))
+    screen.blit(font_medium.render("+", True, WHITE), (590, 390))
 
-    add_btn = draw_button("Add to Order", 350, 430, 300, 50, BLUE_DARK)
+    add_btn = draw_button("Add to Order", 350, 450, 300, 50, BLUE_DARK)
 
     return close_btn, minus_btn, plus_btn, add_btn
 
