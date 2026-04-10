@@ -11,6 +11,7 @@ GREEN = (0, 180, 0)
 RED = (200, 0, 0)
 GREY = (220, 220, 220)
 LIGHT_GREY = (240, 240, 240)
+DARK_GREY = (180, 180, 180)
 
 font_large = pygame.font.Font(None, 60)
 font_medium = pygame.font.Font(None, 40)
@@ -57,24 +58,15 @@ MENU = {
 # ===== GLOBAL VARIABLES =====
 current_order = {}
 current_screen = "main_menu"
-current_category = "Beverages"
+current_category = None
+current_subcategory = None
 
-# ===== PLACEHOLDER FUNCTIONS =====
-def get_order_type(): pass
-def get_dine_in_table(): pass
-def get_customer_name(): pass
-def display_order_summary(): pass
-def confirm_order(): pass
-def release_table(): pass
-def process_order(): pass
-
-def reset_order():
-    global current_order
-    current_order = {}
+popup_item = None
+popup_qty = 1
 
 # ===== GUI SETUP =====
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Cafe Ordering System - Version 2.3")
+pygame.display.set_caption("Cafe Ordering System - Version 2.4")
 
 # ===== DRAW BUTTON =====
 def draw_button(text, x, y, w, h, color=BLUE):
@@ -85,133 +77,110 @@ def draw_button(text, x, y, w, h, color=BLUE):
     return pygame.Rect(x, y, w, h)
 
 # ===== SIDEBAR =====
-def draw_sidebar(selected):
+def draw_sidebar():
     pygame.draw.rect(screen, GREY, (0, 0, 200, HEIGHT))
 
-    bev_color = BLUE_DARK if selected == "Beverages" else BLUE
-    food_color = BLUE_DARK if selected == "Food" else BLUE
+    bev_btn = draw_button("Beverages", 20, 80, 160, 60,
+                          BLUE_DARK if current_category == "Beverages" else BLUE)
+    food_btn = draw_button("Food", 20, 160, 160, 60,
+                           BLUE_DARK if current_category == "Food" else BLUE)
 
-    button_bev = draw_button("Beverages", 20, 80, 160, 60, bev_color)
-    button_food = draw_button("Food", 20, 160, 160, 60, food_color)
+    sub_buttons = []
+    if current_category:
+        x = 230
+        y = 80
+        for sub in MENU[current_category]:
+            rect = draw_button(sub, x, y, 200, 50, DARK_GREY)
+            sub_buttons.append((sub, rect))
+            x += 220
 
-    return button_bev, button_food
+    return bev_btn, food_btn, sub_buttons
 
-# ===== ORDERING SCREEN =====
-def draw_ordering_screen(category):
-    screen.fill(WHITE)
+# ===== ITEM GRID =====
+def draw_item_grid():
+    if not current_subcategory:
+        return []
 
-    # Top bar
-    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
-    screen.blit(font_medium.render("Cafe Name", True, WHITE), (20, 10))
+    items = MENU[current_category][current_subcategory]
+    item_boxes = []
 
-    # Sidebar
-    button_bev, button_food = draw_sidebar(category)
+    x = 230
+    y = 160
+    count = 0
 
-    # Subcategory titles
-    subcats = list(MENU[category].keys())
-    left_sub = subcats[0]
-    right_sub = subcats[1]
+    for item, price in items.items():
+        box = pygame.Rect(x, y, 250, 150)
+        pygame.draw.rect(screen, LIGHT_GREY, box)
 
-    screen.blit(font_medium.render(left_sub, True, BLACK), (230, 80))
-    screen.blit(font_medium.render(right_sub, True, BLACK), (530, 80))
+        pygame.draw.rect(screen, GREY, (x + 10, y + 10, 80, 80))
 
-    button_positions = {}
+        screen.blit(font_small.render(item, True, BLACK), (x + 100, y + 20))
+        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (x + 100, y + 60))
 
-    # ===== LEFT COLUMN (SLIGHTLY LOOSER SPACING) =====
-    y = 140
-    for item, price in MENU[category][left_sub].items():
+        item_boxes.append((item, box))
 
-        screen.blit(font_small.render(item, True, BLACK), (230, y))
-        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (370, y))
+        count += 1
+        if count % 2 == 0:
+            x = 230
+            y += 170
+        else:
+            x += 300
 
-        qty = current_order.get(item, 0)
-        screen.blit(font_small.render(str(qty), True, BLACK), (464, y))
+    return item_boxes
 
-        minus = pygame.Rect(430, y, 24, 24)
-        plus = pygame.Rect(485, y, 24, 24)
+# ===== POPUP WINDOW =====
+def draw_popup():
+    global popup_qty
 
-        pygame.draw.rect(screen, RED, minus)
-        pygame.draw.rect(screen, GREEN, plus)
+    overlay = pygame.Surface((WIDTH, HEIGHT))
+    overlay.set_alpha(150)
+    overlay.fill(BLACK)
+    screen.blit(overlay, (0, 0))
 
-        screen.blit(font_small.render("-", True, WHITE), (436, y))
-        screen.blit(font_small.render("+", True, WHITE), (491, y))
+    popup = pygame.Rect(250, 120, 500, 400)
+    pygame.draw.rect(screen, WHITE, popup)
 
-        button_positions[item] = (plus, minus)
-        y += 45
+    close_btn = pygame.Rect(690, 130, 40, 40)
+    pygame.draw.rect(screen, RED, close_btn)
+    screen.blit(font_medium.render("X", True, WHITE), (700, 130))
 
-    # ===== RIGHT COLUMN (SLIGHTLY LOOSER SPACING) =====
-    y = 140
-    for item, price in MENU[category][right_sub].items():
+    screen.blit(font_medium.render(popup_item, True, BLACK), (300, 150))
 
-        screen.blit(font_small.render(item, True, BLACK), (550, y))
-        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (700, y))
+    pygame.draw.rect(screen, GREY, (350, 200, 200, 150))
 
-        qty = current_order.get(item, 0)
-        screen.blit(font_small.render(str(qty), True, BLACK), (790, y))
+    price = MENU[current_category][current_subcategory][popup_item]
+    screen.blit(font_small.render(f"Price: £{price:.2f}", True, BLACK), (300, 370))
 
-        minus = pygame.Rect(760, y, 24, 24)
-        plus = pygame.Rect(810, y, 24, 24)
+    minus_btn = pygame.Rect(450, 360, 40, 40)
+    plus_btn = pygame.Rect(550, 360, 40, 40)
+    pygame.draw.rect(screen, RED, minus_btn)
+    pygame.draw.rect(screen, GREEN, plus_btn)
 
-        pygame.draw.rect(screen, RED, minus)
-        pygame.draw.rect(screen, GREEN, plus)
+    screen.blit(font_medium.render("-", True, WHITE), (462, 360))
+    screen.blit(font_medium.render("+", True, WHITE), (562, 360))
 
-        screen.blit(font_small.render("-", True, WHITE), (767, y))
-        screen.blit(font_small.render("+", True, WHITE), (816, y))
+    screen.blit(font_medium.render(str(popup_qty), True, BLACK), (515, 365))
 
-        button_positions[item] = (plus, minus)
-        y += 45
+    add_btn = draw_button("Add to Order", 350, 430, 300, 50, BLUE_DARK)
 
-    # ===== BOTTOM BAR (UNCHANGED — YOU SAID IT’S GOOD) =====
-    pygame.draw.rect(screen, BLUE, (0, HEIGHT - 80, WIDTH, 80))
+    return close_btn, minus_btn, plus_btn, add_btn
 
-    total_cost = sum(
-        MENU[cat][sub][item] * qty
-        for cat in MENU
-        for sub in MENU[cat]
-        for item, qty in current_order.items()
-        if item in MENU[cat][sub]
-    )
-
-    screen.blit(font_medium.render(f"Cost: £{total_cost:.2f}", True, WHITE), (20, HEIGHT - 60))
-
-    see_order_btn = draw_button("See Order", 260, HEIGHT - 72, 200, 55, BLUE_DARK)
-    cancel_btn = draw_button("Cancel Order", 480, HEIGHT - 72, 200, 55, BLUE_DARK)
-    complete_btn = draw_button("Complete Order", 700, HEIGHT - 72, 230, 55, BLUE_DARK)
-
-    return button_bev, button_food, see_order_btn, cancel_btn, complete_btn, button_positions
-
-# ===== ORDER SUMMARY SCREEN =====
+# ===== ORDER SUMMARY =====
 def draw_order_summary():
     screen.fill(WHITE)
 
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
     screen.blit(font_medium.render("ORDER", True, WHITE), (20, 10))
 
-    box = pygame.Rect(50, 100, 900, 450)
-    pygame.draw.rect(screen, LIGHT_GREY, box)
-
-    filtered_items = [(item, qty) for item, qty in current_order.items() if qty > 0]
-
-    col1_x = 80
-    col2_x = 500
-    y = 140
-    count = 0
-
-    for item, qty in filtered_items:
-        price = None
+    y = 120
+    for item, qty in current_order.items():
         for cat in MENU:
             for sub in MENU[cat]:
                 if item in MENU[cat][sub]:
                     price = MENU[cat][sub][item]
 
-        x = col1_x if count % 2 == 0 else col2_x
-
-        screen.blit(font_small.render(f"{item} x{qty} - £{price * qty:.2f}", True, BLACK), (x, y))
-
-        if count % 2 == 1:
-            y += 40
-
-        count += 1
+        screen.blit(font_small.render(f"{item} x{qty} - £{price * qty:.2f}", True, BLACK), (80, y))
+        y += 40
 
     total_cost = sum(
         MENU[cat][sub][item] * qty
@@ -223,11 +192,11 @@ def draw_order_summary():
 
     screen.blit(font_medium.render(f"Total: £{total_cost:.2f}", True, BLACK), (60, 570))
 
-    back_btn = draw_button("Back", 800, 560, 150, 50)
-    return back_btn
+    return draw_button("Back", 800, 560, 150, 50)
 
 # ===== MAIN LOOP =====
 running = True
+item_boxes = []
 
 while running:
     screen.fill(WHITE)
@@ -239,37 +208,75 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN:
 
             if current_screen == "main_menu":
-                button_start = draw_button("Start New Order", 350, 300, 300, 70)
-                button_release = draw_button("Release Table", 350, 380, 300, 70)
-                button_quit = draw_button("Quit", 350, 460, 300, 70)
+                start_btn = draw_button("Start New Order", 350, 300, 300, 70)
+                release_btn = draw_button("Release Table", 350, 380, 300, 70)
+                quit_btn = draw_button("Quit", 350, 460, 300, 70)
 
-                if button_start.collidepoint(event.pos):
+                if start_btn.collidepoint(event.pos):
                     current_screen = "ordering"
 
-                if button_quit.collidepoint(event.pos):
+                if quit_btn.collidepoint(event.pos):
                     running = False
 
             elif current_screen == "ordering":
-                button_bev, button_food, see_order_btn, cancel_btn, complete_btn, button_positions = draw_ordering_screen(current_category)
 
-                if button_bev.collidepoint(event.pos):
+                bev_btn, food_btn, sub_btns = draw_sidebar()
+
+                if bev_btn.collidepoint(event.pos):
                     current_category = "Beverages"
+                    current_subcategory = None
 
-                if button_food.collidepoint(event.pos):
+                if food_btn.collidepoint(event.pos):
                     current_category = "Food"
+                    current_subcategory = None
 
-                if see_order_btn.collidepoint(event.pos):
+                for sub, rect in sub_btns:
+                    if rect.collidepoint(event.pos):
+                        current_subcategory = sub
+
+                if current_subcategory:
+                    for item, rect in item_boxes:
+                        if rect.collidepoint(event.pos):
+                            popup_item = item
+                            popup_qty = 1
+
+                if popup_item:
+                    close_btn, minus_btn, plus_btn, add_btn = draw_popup()
+
+                    if close_btn.collidepoint(event.pos):
+                        popup_item = None
+
+                    if minus_btn.collidepoint(event.pos):
+                        popup_qty = max(1, popup_qty - 1)
+
+                    if plus_btn.collidepoint(event.pos):
+                        popup_qty = min(MAX_ITEM_QUANTITY, popup_qty + 1)
+
+                    if add_btn.collidepoint(event.pos):
+                        current_order[popup_item] = min(
+                            MAX_ITEM_QUANTITY,
+                            current_order.get(popup_item, 0) + popup_qty
+                        )
+                        popup_item = None
+
+                see_btn = draw_button("See Order", 260, HEIGHT - 72, 200, 55, BLUE_DARK)
+                cancel_btn = draw_button("Cancel Order", 480, HEIGHT - 72, 200, 55, BLUE_DARK)
+                complete_btn = draw_button("Complete Order", 700, HEIGHT - 72, 230, 55, BLUE_DARK)
+
+                if see_btn.collidepoint(event.pos):
                     current_screen = "order_summary"
 
                 if cancel_btn.collidepoint(event.pos):
-                    reset_order()
+                    current_order = {}
+                    current_category = None
+                    current_subcategory = None
                     current_screen = "main_menu"
 
-                for item, (plus, minus) in button_positions.items():
-                    if plus.collidepoint(event.pos):
-                        current_order[item] = min(current_order.get(item, 0) + 1, MAX_ITEM_QUANTITY)
-                    if minus.collidepoint(event.pos):
-                        current_order[item] = max(current_order.get(item, 0) - 1, 0)
+                if complete_btn.collidepoint(event.pos):
+                    current_order = {}
+                    current_category = None
+                    current_subcategory = None
+                    current_screen = "main_menu"
 
             elif current_screen == "order_summary":
                 back_btn = draw_order_summary()
@@ -284,7 +291,24 @@ while running:
         draw_button("Quit", 350, 460, 300, 70)
 
     elif current_screen == "ordering":
-        draw_ordering_screen(current_category)
+        bev_btn, food_btn, sub_btns = draw_sidebar()
+        item_boxes = draw_item_grid()
+
+        total_cost = sum(
+            MENU[cat][sub][item] * qty
+            for cat in MENU
+            for sub in MENU[cat]
+            for item, qty in current_order.items()
+            if item in MENU[cat][sub]
+        )
+        screen.blit(font_medium.render(f"Cost: £{total_cost:.2f}", True, BLACK), (20, HEIGHT - 60))
+
+        draw_button("See Order", 260, HEIGHT - 72, 200, 55, BLUE_DARK)
+        draw_button("Cancel Order", 480, HEIGHT - 72, 200, 55, BLUE_DARK)
+        draw_button("Complete Order", 700, HEIGHT - 72, 230, 55, BLUE_DARK)
+
+        if popup_item:
+            draw_popup()
 
     elif current_screen == "order_summary":
         draw_order_summary()
