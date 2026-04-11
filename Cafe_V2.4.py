@@ -1,4 +1,5 @@
 import pygame
+import os
 pygame.init()
 
 # ===== CONSTANTS =====
@@ -68,6 +69,72 @@ popup_qty = 1
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Cafe Ordering System - Version 2.4")
 
+# ===== IMAGE LOADING (Taniwha-style) =====
+def load_image(filename, fallback_color, size):
+    if os.path.exists(filename):
+        try:
+            img = pygame.image.load(filename).convert_alpha()
+            img = pygame.transform.scale(img, size)
+            return img
+        except:
+            pass
+
+    surf = pygame.Surface(size)
+    surf.fill(fallback_color)
+    return surf
+
+# ===== LOAD ALL ITEM IMAGES =====
+iced_coffee_img = load_image("Iced Coffee.png", GREY, (60, 60))
+iced_tea_img = load_image("Iced Tea.png", GREY, (60, 60))
+lemonade_img = load_image("Lemonade.png", GREY, (60, 60))
+smoothie_img = load_image("Smoothie.png", GREY, (60, 60))
+soda_img = load_image("Soda.png", GREY, (60, 60))
+
+coffee_img = load_image("Coffee.png", GREY, (60, 60))
+tea_img = load_image("Tea.png", GREY, (60, 60))
+hot_chocolate_img = load_image("Hot Chocolate.png", GREY, (60, 60))
+espresso_img = load_image("Espresso.png", GREY, (60, 60))
+latte_img = load_image("Latte.png", GREY, (60, 60))
+
+croissant_img = load_image("Croissant.png", GREY, (60, 60))
+muffin_img = load_image("Muffin.png", GREY, (60, 60))
+scone_img = load_image("Scone.png", GREY, (60, 60))
+sandwich_img = load_image("Sandwich.png", GREY, (60, 60))
+cookie_img = load_image("Cookie.png", GREY, (60, 60))
+
+salad_img = load_image("Salad.png", GREY, (60, 60))
+hot_chips_img = load_image("Hot Chips.png", GREY, (60, 60))
+quiche_img = load_image("Quiche.png", GREY, (60, 60))
+pasta_img = load_image("Pasta.png", GREY, (60, 60))
+burger_img = load_image("Burger.png", GREY, (60, 60))
+
+# ===== MAP ITEM NAMES TO IMAGES =====
+ITEM_IMAGES = {
+    "Iced Coffee": iced_coffee_img,
+    "Iced Tea": iced_tea_img,
+    "Lemonade": lemonade_img,
+    "Smoothie": smoothie_img,
+    "Soda": soda_img,
+
+    "Coffee": coffee_img,
+    "Tea": tea_img,
+    "Hot Chocolate": hot_chocolate_img,
+    "Espresso": espresso_img,
+    "Latte": latte_img,
+
+    "Croissant": croissant_img,
+    "Muffin": muffin_img,
+    "Scone": scone_img,
+    "Sandwich": sandwich_img,
+    "Cookie": cookie_img,
+
+    "Salad": salad_img,
+    "Hot Chips": hot_chips_img,
+    "Quiche": quiche_img,
+    "Pasta": pasta_img,
+    "Burger": burger_img
+}
+
 # ===== DRAW BUTTON =====
 def draw_button(text, x, y, w, h, color=BLUE):
     pygame.draw.rect(screen, color, (x, y, w, h))
@@ -112,7 +179,8 @@ def draw_item_grid():
         box = pygame.Rect(x, y, 200, 140)
         pygame.draw.rect(screen, LIGHT_GREY, box)
 
-        pygame.draw.rect(screen, GREY, (x + 10, y + 10, 60, 60))
+        # IMAGE
+        screen.blit(ITEM_IMAGES[item], (x + 10, y + 10))
 
         screen.blit(font_small.render(item, True, BLACK), (x + 80, y + 15))
         screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (x + 80, y + 50))
@@ -142,21 +210,19 @@ def draw_popup():
 
     close_btn = pygame.Rect(690, 130, 40, 40)
     pygame.draw.rect(screen, RED, close_btn)
-    screen.blit(font_medium.render("X", True, WHITE), (700, 130))
+    screen.blit(font_medium.render("X", True, WHITE), (701, 138))
 
-    # Centered name
     name_label = font_medium.render(popup_item, True, BLACK)
     screen.blit(name_label, (250 + (500 - name_label.get_width()) // 2, 150))
 
-    # Centered image placeholder
     img_x = 250 + (500 - 200) // 2
-    pygame.draw.rect(screen, GREY, (img_x, 200, 200, 150))
+    popup_img = load_image(f"{popup_item}.png", GREY, (200, 150))
+    screen.blit(popup_img, (img_x, 200))
 
     price = MENU[current_category][current_subcategory][popup_item]
     price_label = font_small.render(f"Price: £{price:.2f}", True, BLACK)
     screen.blit(price_label, (250 + (500 - price_label.get_width()) // 2, 360))
 
-    # Quantity controls centered
     minus_btn = pygame.Rect(380, 390, 40, 40)
     plus_btn = pygame.Rect(580, 390, 40, 40)
     pygame.draw.rect(screen, RED, minus_btn)
@@ -165,8 +231,8 @@ def draw_popup():
     qty_label = font_medium.render(str(popup_qty), True, BLACK)
     screen.blit(qty_label, (250 + (500 - qty_label.get_width()) // 2, 395))
 
-    screen.blit(font_medium.render("-", True, WHITE), (390, 390))
-    screen.blit(font_medium.render("+", True, WHITE), (590, 390))
+    screen.blit(font_medium.render("-", True, WHITE), (394, 394))
+    screen.blit(font_medium.render("+", True, WHITE), (592, 394))
 
     add_btn = draw_button("Add to Order", 350, 450, 300, 50, BLUE_DARK)
 
@@ -187,7 +253,6 @@ def draw_order_summary():
     count = 0
 
     for item, qty in items:
-        # find price
         price = None
         for cat in MENU:
             for sub in MENU[cat]:
@@ -255,7 +320,7 @@ while running:
                     if rect.collidepoint(event.pos):
                         current_subcategory = sub
 
-                # ===== POPUP ACTIVE — ONLY POPUP BUTTONS WORK =====
+                # POPUP ACTIVE — ONLY POPUP BUTTONS WORK
                 if popup_item is not None:
 
                     close_btn, minus_btn, plus_btn, add_btn = draw_popup()
@@ -280,9 +345,9 @@ while running:
                         popup_item = None
                         continue
 
-                    continue  # block all background clicks
+                    continue
 
-                # ===== ONLY CHECK ITEM CLICKS IF POPUP IS CLOSED =====
+                # ONLY CHECK ITEM CLICKS IF POPUP IS CLOSED
                 if popup_item is None and current_subcategory:
                     for item, rect in item_boxes:
                         if rect.collidepoint(event.pos):
@@ -304,10 +369,7 @@ while running:
                     current_screen = "main_menu"
 
                 if complete_btn.collidepoint(event.pos):
-                    current_order = {}
-                    current_category = None
-                    current_subcategory = None
-                    current_screen = "main_menu"
+                    pass  # placeholder
 
             elif current_screen == "order_summary":
                 back_btn = draw_order_summary()
