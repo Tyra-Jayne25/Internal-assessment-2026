@@ -179,15 +179,29 @@ def draw_order_summary():
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
     screen.blit(font_medium.render("ORDER", True, WHITE), (20, 10))
 
-    y = 120
-    for item, qty in current_order.items():
+    items = [(item, qty) for item, qty in current_order.items() if qty > 0]
+
+    col1_x = 80
+    col2_x = 500
+    y = 140
+    count = 0
+
+    for item, qty in items:
+        # find price
+        price = None
         for cat in MENU:
             for sub in MENU[cat]:
                 if item in MENU[cat][sub]:
                     price = MENU[cat][sub][item]
 
-        screen.blit(font_small.render(f"{item} x{qty} - £{price * qty:.2f}", True, BLACK), (80, y))
-        y += 40
+        x = col1_x if count % 2 == 0 else col2_x
+
+        screen.blit(font_small.render(f"{item} x{qty} - £{price * qty:.2f}", True, BLACK), (x, y))
+
+        if count % 2 == 1:
+            y += 40
+
+        count += 1
 
     total_cost = sum(
         MENU[cat][sub][item] * qty
@@ -241,23 +255,22 @@ while running:
                     if rect.collidepoint(event.pos):
                         current_subcategory = sub
 
-                if current_subcategory:
-                    for item, rect in item_boxes:
-                        if rect.collidepoint(event.pos):
-                            popup_item = item
-                            popup_qty = 1
+                # ===== POPUP ACTIVE — ONLY POPUP BUTTONS WORK =====
+                if popup_item is not None:
 
-                if popup_item:
                     close_btn, minus_btn, plus_btn, add_btn = draw_popup()
 
                     if close_btn.collidepoint(event.pos):
                         popup_item = None
+                        continue
 
                     if minus_btn.collidepoint(event.pos):
                         popup_qty = max(1, popup_qty - 1)
+                        continue
 
                     if plus_btn.collidepoint(event.pos):
                         popup_qty = min(MAX_ITEM_QUANTITY, popup_qty + 1)
+                        continue
 
                     if add_btn.collidepoint(event.pos):
                         current_order[popup_item] = min(
@@ -265,6 +278,17 @@ while running:
                             current_order.get(popup_item, 0) + popup_qty
                         )
                         popup_item = None
+                        continue
+
+                    continue  # block all background clicks
+
+                # ===== ONLY CHECK ITEM CLICKS IF POPUP IS CLOSED =====
+                if popup_item is None and current_subcategory:
+                    for item, rect in item_boxes:
+                        if rect.collidepoint(event.pos):
+                            popup_item = item
+                            popup_qty = 1
+                            break
 
                 see_btn = draw_button("See Order", 260, HEIGHT - 72, 200, 55, BLUE_DARK)
                 cancel_btn = draw_button("Cancel Order", 480, HEIGHT - 72, 200, 55, BLUE_DARK)
