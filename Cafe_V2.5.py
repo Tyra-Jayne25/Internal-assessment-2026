@@ -183,7 +183,7 @@ def draw_item_grid():
         screen.blit(ITEM_IMAGES[item], (x + 10, y + 10))
 
         screen.blit(font_small.render(item, True, BLACK), (x + 80, y + 15))
-        screen.blit(font_small.render(f"£{price:.2f}", True, BLACK), (x + 80, y + 50))
+        screen.blit(font_small.render(f"${price:.2f}", True, BLACK), (x + 80, y + 50))
 
         item_boxes.append((item, box))
 
@@ -261,7 +261,7 @@ def draw_order_summary():
 
         x = col1_x if count % 2 == 0 else col2_x
 
-        screen.blit(font_small.render(f"{item} x{qty} - £{price * qty:.2f}", True, BLACK), (x, y))
+        screen.blit(font_small.render(f"{item} x{qty} - ${price * qty:.2f}", True, BLACK), (x, y))
 
         if count % 2 == 1:
             y += 40
@@ -276,7 +276,7 @@ def draw_order_summary():
         if item in MENU[cat][sub]
     )
 
-    screen.blit(font_medium.render(f"Total: £{total_cost:.2f}", True, BLACK), (60, 570))
+    screen.blit(font_medium.render(f"Total: ${total_cost:.2f}", True, BLACK), (60, 570))
 
     return draw_button("Back", 800, 560, 150, 50)
 
@@ -394,7 +394,7 @@ while running:
             for item, qty in current_order.items()
             if item in MENU[cat][sub]
         )
-        screen.blit(font_medium.render(f"Cost: £{total_cost:.2f}", True, BLACK), (20, HEIGHT - 60))
+        screen.blit(font_medium.render(f"Cost: ${total_cost:.2f}", True, BLACK), (20, HEIGHT - 60))
 
         draw_button("See Order", 260, HEIGHT - 72, 200, 55, BLUE_DARK)
         draw_button("Cancel Order", 480, HEIGHT - 72, 200, 55, BLUE_DARK)
