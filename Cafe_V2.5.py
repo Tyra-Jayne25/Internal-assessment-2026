@@ -286,10 +286,10 @@ def draw_order_summary():
 
 # ===== NEW SCREENS FOR VERSION 2.5 =====
 
-def draw_complete_review():
+def draw_complete_order():
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
-    screen.blit(font_medium.render("REVIEW ORDER", True, WHITE), (20, 10))
+    screen.blit(font_medium.render("ORDER", True, WHITE), (20, 10))
 
     items = [(item, qty) for item, qty in current_order.items() if qty > 0]
 
@@ -338,9 +338,9 @@ def draw_order_type():
 def draw_takeaway_name():
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
-    screen.blit(font_medium.render("TAKEAWAY ORDER", True, WHITE), (20, 10))
+    screen.blit(font_medium.render("TAKEAWAY", True, WHITE), (20, 10))
 
-    screen.blit(font_medium.render("Enter your name:", True, BLACK), (350, 200))
+    screen.blit(font_medium.render("Enter your name:", True, BLACK), (300, 200))
     pygame.draw.rect(screen, LIGHT_GREY, (300, 260, 400, 60))
 
     name_text = font_medium.render(customer_name, True, BLACK)
@@ -353,7 +353,7 @@ def draw_takeaway_name():
 def draw_dine_in():
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
-    screen.blit(font_medium.render("DINE-IN ORDER", True, WHITE), (20, 10))
+    screen.blit(font_medium.render("DINE-IN", True, WHITE), (20, 10))
 
     if len(tables_available) == 0:
         return None, None
@@ -361,7 +361,7 @@ def draw_dine_in():
     table_num = tables_available[0]
     table_label = font_large.render(str(table_num), True, BLACK)
 
-    screen.blit(font_medium.render("Your table number is:", True, BLACK), (330, 200))
+    screen.blit(font_medium.render("Your table number is:", True, BLACK), (350, 200))
     screen.blit(table_label, (480, 260))
 
     enter_btn = draw_button("Enter", 350, 450, 300, 70)
@@ -372,7 +372,7 @@ def draw_no_tables():
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
     screen.blit(font_medium.render("NO TABLES AVAILABLE", True, WHITE), (20, 10))
 
-    screen.blit(font_medium.render("Please wait for the next available table.", True, BLACK), (200, 300))
+    screen.blit(font_medium.render("Sorry, no tables available. Please wait for the next available table.", True, BLACK), (90, 200))
 
     back_btn = draw_button("Back", 350, 450, 300, 70)
     return back_btn
@@ -491,7 +491,7 @@ while running:
 
             # ===== COMPLETE REVIEW SCREEN =====
             elif current_screen == "complete_review":
-                continue_btn, back_btn = draw_complete_review()
+                continue_btn, back_btn = draw_complete_order()
 
                 if continue_btn.collidepoint(event.pos):
                     current_screen = "order_type"
@@ -575,7 +575,7 @@ while running:
         draw_order_summary()
 
     elif current_screen == "complete_review":
-        draw_complete_review()
+        draw_complete_order()
 
     elif current_screen == "order_type":
         draw_order_type()
