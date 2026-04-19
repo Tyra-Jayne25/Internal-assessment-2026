@@ -112,6 +112,10 @@ quiche_img = load_image("Quiche.png", GREY, (60, 60))
 pasta_img = load_image("Pasta.png", GREY, (60, 60))
 burger_img = load_image("Burger.png", GREY, (60, 60))
 
+# ===== NEW PLACEHOLDER IMAGES =====
+takeaway_img = load_image("Takeaway.png", GREY, (150, 150))
+dinein_img = load_image("Dine-In.png", GREY, (150, 150))
+
 # ===== MAP ITEM NAMES TO IMAGES =====
 ITEM_IMAGES = {
     "Iced Coffee": iced_coffee_img,
@@ -119,19 +123,16 @@ ITEM_IMAGES = {
     "Lemonade": lemonade_img,
     "Smoothie": smoothie_img,
     "Soda": soda_img,
-
     "Coffee": coffee_img,
     "Tea": tea_img,
     "Hot Chocolate": hot_chocolate_img,
     "Espresso": espresso_img,
     "Latte": latte_img,
-
     "Croissant": croissant_img,
     "Muffin": muffin_img,
     "Scone": scone_img,
     "Sandwich": sandwich_img,
     "Cookie": cookie_img,
-
     "Salad": salad_img,
     "Hot Chips": hot_chips_img,
     "Quiche": quiche_img,
@@ -183,7 +184,6 @@ def draw_item_grid():
         box = pygame.Rect(x, y, 200, 140)
         pygame.draw.rect(screen, LIGHT_GREY, box)
 
-        # IMAGE
         screen.blit(ITEM_IMAGES[item], (x + 10, y + 10))
 
         screen.blit(font_small.render(item, True, BLACK), (x + 80, y + 15))
@@ -284,12 +284,95 @@ def draw_order_summary():
 
     return draw_button("Back", 800, 560, 150, 50)
 
-# ===== NEW SCREENS FOR VERSION 2.5 =====
+# ===== THANK YOU SCREEN =====
+def draw_thank_you():
+    screen.fill(WHITE)
+    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
 
+    title = font_large.render("Cafe Name", True, WHITE)
+    screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
+
+    msg = font_medium.render("Thank You for Ordering at our Cafe!", True, BLACK)
+    screen.blit(msg, (WIDTH//2 - msg.get_width()//2, HEIGHT//2 - 20))
+
+# ===== UPDATED ORDER TYPE SCREEN =====
+def draw_order_type():
+    screen.fill(WHITE)
+    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
+
+    title = font_medium.render("ORDER TYPE", True, WHITE)
+    screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
+
+    take_rect = pygame.Rect(200, 200, 250, 250)
+    pygame.draw.rect(screen, LIGHT_GREY, take_rect)
+    screen.blit(takeaway_img, (take_rect.x + 50, take_rect.y + 20))
+
+    take_label = font_medium.render("Takeaway", True, BLACK)
+    screen.blit(take_label, (take_rect.centerx - take_label.get_width()//2,
+                             take_rect.y + 190))
+
+    dine_rect = pygame.Rect(550, 200, 250, 250)
+    pygame.draw.rect(screen, LIGHT_GREY, dine_rect)
+    screen.blit(dinein_img, (dine_rect.x + 50, dine_rect.y + 20))
+
+    dine_label = font_medium.render("Dine-In", True, BLACK)
+    screen.blit(dine_label, (dine_rect.centerx - dine_label.get_width()//2,
+                             dine_rect.y + 190))
+
+    back_btn = draw_button("Back", WIDTH//2 - 150, 500, 300, 60)
+
+    return dine_rect, take_rect, back_btn
+
+# ===== UPDATED TAKEAWAY SCREEN =====
+def draw_takeaway_name():
+    screen.fill(WHITE)
+    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
+
+    title = font_medium.render("TAKEAWAY", True, WHITE)
+    screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
+
+    prompt = font_medium.render("Enter your name:", True, BLACK)
+    screen.blit(prompt, (WIDTH//2 - prompt.get_width()//2, 200))
+
+    pygame.draw.rect(screen, LIGHT_GREY, (WIDTH//2 - 200, 260, 400, 60))
+    name_text = font_medium.render(customer_name, True, BLACK)
+    screen.blit(name_text, (WIDTH//2 - 190, 270))
+
+    enter_btn = draw_button("Enter", WIDTH//2 - 150, 350, 300, 70)
+    back_btn = draw_button("Back", WIDTH//2 - 150, 450, 300, 70)
+
+    return enter_btn, back_btn
+
+# ===== UPDATED DINE-IN SCREEN =====
+def draw_dine_in():
+    screen.fill(WHITE)
+    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
+
+    title = font_medium.render("DINE-IN", True, WHITE)
+    screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
+
+    if len(tables_available) == 0:
+        return None, None
+
+    table_num = tables_available[0]
+
+    label = font_medium.render("Your table number is:", True, BLACK)
+    screen.blit(label, (WIDTH//2 - label.get_width()//2, 200))
+
+    pygame.draw.rect(screen, LIGHT_GREY, (WIDTH//2 - 75, 260, 150, 100))
+    num = font_large.render(str(table_num), True, BLACK)
+    screen.blit(num, (WIDTH//2 - num.get_width()//2, 280))
+
+    enter_btn = draw_button("Enter", WIDTH//2 - 150, 450, 300, 70)
+    return enter_btn, table_num
+
+# ===== UPDATED REVIEW ORDER SCREEN =====
 def draw_complete_order():
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
-    screen.blit(font_medium.render("ORDER", True, WHITE), (20, 10))
+
+    title = font_medium.render("REVIEW ORDER", True, WHITE)
+    screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
 
     items = [(item, qty) for item, qty in current_order.items() if qty > 0]
 
@@ -319,67 +402,31 @@ def draw_complete_order():
         for item, qty in current_order.items()
         if item in MENU[cat][sub]
     )
-    screen.blit(font_medium.render(f"Total: ${total_cost:.2f}", True, BLACK), (60, 570))
+    total_label = font_medium.render(f"Total: ${total_cost:.2f}", True, BLACK)
+    screen.blit(total_label, (60, 570))
 
-    continue_btn = draw_button("Continue", 350, 560, 200, 50)
-    back_btn = draw_button("Back", 50, 560, 150, 50)
+    continue_btn = draw_button("Continue", WIDTH//2 - 100, 560, 200, 50)
+    back_btn = draw_button("Back", WIDTH - 200, 560, 150, 50)
+
     return continue_btn, back_btn
 
-def draw_order_type():
-    screen.fill(WHITE)
-    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
-    screen.blit(font_medium.render("ORDER TYPE", True, WHITE), (20, 10))
-
-    dine_btn = draw_button("Dine-In", 350, 250, 300, 70)
-    take_btn = draw_button("Takeaway", 350, 350, 300, 70)
-    back_btn = draw_button("Back", 350, 450, 300, 70)
-    return dine_btn, take_btn, back_btn
-
-def draw_takeaway_name():
-    screen.fill(WHITE)
-    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
-    screen.blit(font_medium.render("TAKEAWAY", True, WHITE), (20, 10))
-
-    screen.blit(font_medium.render("Enter your name:", True, BLACK), (300, 200))
-    pygame.draw.rect(screen, LIGHT_GREY, (300, 260, 400, 60))
-
-    name_text = font_medium.render(customer_name, True, BLACK)
-    screen.blit(name_text, (310, 270))
-
-    enter_btn = draw_button("Enter", 350, 350, 300, 70)
-    back_btn = draw_button("Back", 350, 450, 300, 70)
-    return enter_btn, back_btn
-
-def draw_dine_in():
-    screen.fill(WHITE)
-    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
-    screen.blit(font_medium.render("DINE-IN", True, WHITE), (20, 10))
-
-    if len(tables_available) == 0:
-        return None, None
-
-    table_num = tables_available[0]
-    table_label = font_large.render(str(table_num), True, BLACK)
-
-    screen.blit(font_medium.render("Your table number is:", True, BLACK), (350, 200))
-    screen.blit(table_label, (480, 260))
-
-    enter_btn = draw_button("Enter", 350, 450, 300, 70)
-    return enter_btn, table_num
-
+# ===== NO TABLES SCREEN =====
 def draw_no_tables():
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
-    screen.blit(font_medium.render("NO TABLES AVAILABLE", True, WHITE), (20, 10))
+    title = font_medium.render("NO TABLES AVAILABLE", True, WHITE)
+    screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
 
-    screen.blit(font_medium.render("Sorry, no tables available. Please wait for the next available table.", True, BLACK), (90, 200))
+    msg = font_medium.render("Sorry, no tables available. Please wait for the next available table.", True, BLACK)
+    screen.blit(msg, (WIDTH//2 - msg.get_width()//2, 200))
 
-    back_btn = draw_button("Back", 350, 450, 300, 70)
+    back_btn = draw_button("Back", WIDTH//2 - 150, 450, 300, 70)
     return back_btn
 
 # ===== MAIN LOOP =====
 running = True
 item_boxes = []
+thank_you_start_time = None
 
 while running:
     screen.fill(WHITE)
@@ -388,22 +435,18 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-        # ===== KEYBOARD INPUT FOR TAKEAWAY NAME =====
         if current_screen == "takeaway_name" and event.type == pygame.KEYDOWN:
             if event.key == pygame.K_BACKSPACE:
                 customer_name = customer_name[:-1]
             elif event.key == pygame.K_RETURN:
-                # basic behaviour: finish order and go back to main menu
-                current_screen = "main_menu"
+                current_screen = "thank_you"
+                thank_you_start_time = pygame.time.get_ticks()
                 current_order.clear()
-                customer_name = ""
             else:
                 customer_name += event.unicode
 
-        # ===== MOUSE CLICK EVENTS =====
         if event.type == pygame.MOUSEBUTTONDOWN:
 
-            # ===== MAIN MENU =====
             if current_screen == "main_menu":
                 start_btn = draw_button("Start New Order", 350, 300, 300, 70)
                 release_btn = draw_button("Release Table", 350, 380, 300, 70)
@@ -415,7 +458,6 @@ while running:
                 if quit_btn.collidepoint(event.pos):
                     running = False
 
-            # ===== ORDERING SCREEN =====
             elif current_screen == "ordering":
 
                 bev_btn, food_btn, sub_btns = draw_sidebar()
@@ -432,9 +474,7 @@ while running:
                     if rect.collidepoint(event.pos):
                         current_subcategory = sub
 
-                # POPUP ACTIVE — ONLY POPUP BUTTONS WORK
                 if popup_item is not None:
-
                     close_btn, minus_btn, plus_btn, add_btn = draw_popup()
 
                     if close_btn.collidepoint(event.pos):
@@ -459,7 +499,6 @@ while running:
 
                     continue
 
-                # ONLY CHECK ITEM CLICKS IF POPUP IS CLOSED
                 if popup_item is None and current_subcategory:
                     for item, rect in item_boxes:
                         if rect.collidepoint(event.pos):
@@ -483,13 +522,11 @@ while running:
                 if complete_btn.collidepoint(event.pos):
                     current_screen = "complete_review"
 
-            # ===== ORDER SUMMARY SCREEN =====
             elif current_screen == "order_summary":
                 back_btn = draw_order_summary()
                 if back_btn.collidepoint(event.pos):
                     current_screen = "ordering"
 
-            # ===== COMPLETE REVIEW SCREEN =====
             elif current_screen == "complete_review":
                 continue_btn, back_btn = draw_complete_order()
 
@@ -499,54 +536,51 @@ while running:
                 if back_btn.collidepoint(event.pos):
                     current_screen = "ordering"
 
-            # ===== ORDER TYPE SCREEN =====
             elif current_screen == "order_type":
-                dine_btn, take_btn, back_btn = draw_order_type()
+                dine_rect, take_rect, back_btn = draw_order_type()
 
-                if dine_btn.collidepoint(event.pos):
+                if dine_rect.collidepoint(event.pos):
                     if len(tables_available) == 0:
                         current_screen = "no_tables"
                     else:
                         current_screen = "dine_in"
 
-                if take_btn.collidepoint(event.pos):
+                if take_rect.collidepoint(event.pos):
                     current_screen = "takeaway_name"
 
                 if back_btn.collidepoint(event.pos):
                     current_screen = "complete_review"
 
-            # ===== TAKEAWAY NAME SCREEN (MOUSE) =====
             elif current_screen == "takeaway_name":
                 enter_btn, back_btn = draw_takeaway_name()
 
                 if enter_btn.collidepoint(event.pos):
-                    current_screen = "main_menu"
+                    current_screen = "thank_you"
+                    thank_you_start_time = pygame.time.get_ticks()
                     current_order.clear()
                     customer_name = ""
 
                 if back_btn.collidepoint(event.pos):
                     current_screen = "order_type"
 
-            # ===== DINE-IN SCREEN =====
             elif current_screen == "dine_in":
                 enter_btn, table_num = draw_dine_in()
 
                 if enter_btn and enter_btn.collidepoint(event.pos):
                     tables_available.remove(table_num)
-                    current_screen = "main_menu"
+                    current_screen = "thank_you"
+                    thank_you_start_time = pygame.time.get_ticks()
                     current_order.clear()
 
-            # ===== NO TABLES SCREEN =====
             elif current_screen == "no_tables":
                 back_btn = draw_no_tables()
 
                 if back_btn.collidepoint(event.pos):
                     current_screen = "order_type"
 
-    # ===== DRAW BY CURRENT SCREEN =====
     if current_screen == "main_menu":
         title = font_large.render("Cafe Ordering System", True, BLACK)
-        screen.blit(title, (250, 150))
+        screen.blit(title, (WIDTH//2 - title.get_width()//2, 150))
         draw_button("Start New Order", 350, 300, 300, 70)
         draw_button("Release Table", 350, 380, 300, 70)
         draw_button("Quit", 350, 460, 300, 70)
@@ -562,7 +596,8 @@ while running:
             for item, qty in current_order.items()
             if item in MENU[cat][sub]
         )
-        screen.blit(font_medium.render(f"Cost: ${total_cost:.2f}", True, BLACK), (20, HEIGHT - 60))
+        cost_label = font_medium.render(f"Cost: ${total_cost:.2f}", True, BLACK)
+        screen.blit(cost_label, (20, HEIGHT - 60))
 
         draw_button("See Order", 260, HEIGHT - 72, 200, 55, BLUE_DARK)
         draw_button("Cancel Order", 480, HEIGHT - 72, 200, 55, BLUE_DARK)
@@ -589,6 +624,11 @@ while running:
     elif current_screen == "no_tables":
         draw_no_tables()
 
-    pygame.display.update()
+    elif current_screen == "thank_you":
+        draw_thank_you()
+        if thank_you_start_time and pygame.time.get_ticks() - thank_you_start_time >= 8000:
+            current_screen = "main_menu"
 
+    pygame.display.update()
+    
 pygame.quit()
