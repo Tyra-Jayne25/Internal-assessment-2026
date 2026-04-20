@@ -70,6 +70,9 @@ customer_name = ""
 tables_available = [1,2,3,4,5,6,7,8,9,10]
 assigned_table = None
 
+# text input active flag for takeaway
+input_active = False
+
 # ===== GUI SETUP =====
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Cafe Ordering System - Version 2.5")
@@ -423,6 +426,50 @@ def draw_no_tables():
     back_btn = draw_button("Back", WIDTH//2 - 150, 450, 300, 70)
     return back_btn
 
+# ===== RELEASE TABLE SCREEN (OPTION A GRID) =====
+def draw_release_table():
+    screen.fill(WHITE)
+    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
+    title = font_medium.render("RELEASE TABLE", True, WHITE)
+    screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
+
+    tables_rects = []
+    all_tables = list(range(1, 11))
+    used_tables = [t for t in all_tables if t not in tables_available]
+
+    start_x = 200
+    start_y = 140
+    w, h = 100, 80
+    gap_x = 40
+    gap_y = 40
+
+    for i, t in enumerate(all_tables):
+        row = i // 5
+        col = i % 5
+        x = start_x + col * (w + gap_x)
+        y = start_y + row * (h + gap_y)
+
+        if t in used_tables:
+            color = RED
+        else:
+            color = GREY
+
+        rect = pygame.Rect(x, y, w, h)
+        pygame.draw.rect(screen, color, rect)
+
+        label = font_medium.render(str(t), True, WHITE if t in used_tables else BLACK)
+        screen.blit(label, (rect.centerx - label.get_width()//1,
+                            rect.centery - label.get_height()//2))
+
+        tables_rects.append((t, rect, t in used_tables))
+
+    info = font_small.render("Red = In Use (click to release)", True, BLACK)
+    screen.blit(info, (WIDTH//2 - info.get_width()//2, 380))
+
+    back_btn = draw_button("Back", WIDTH//2 - 150, 500, 300, 60)
+
+    return tables_rects, back_btn
+
 # ===== MAIN LOOP =====
 running = True
 item_boxes = []
@@ -435,7 +482,8 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-        if current_screen == "takeaway_name" and event.type == pygame.KEYDOWN:
+        # TAKEAWAY NAME TYPING (only when active)
+        if current_screen == "takeaway_name" and event.type == pygame.KEYDOWN and input_active:
             if event.key == pygame.K_BACKSPACE:
                 customer_name = customer_name[:-1]
             elif event.key == pygame.K_RETURN:
@@ -454,6 +502,9 @@ while running:
 
                 if start_btn.collidepoint(event.pos):
                     current_screen = "ordering"
+
+                if release_btn.collidepoint(event.pos):
+                    current_screen = "release_table"
 
                 if quit_btn.collidepoint(event.pos):
                     running = False
@@ -547,6 +598,8 @@ while running:
 
                 if take_rect.collidepoint(event.pos):
                     current_screen = "takeaway_name"
+                    # reset input state
+                    input_active = False
 
                 if back_btn.collidepoint(event.pos):
                     current_screen = "complete_review"
@@ -554,20 +607,28 @@ while running:
             elif current_screen == "takeaway_name":
                 enter_btn, back_btn = draw_takeaway_name()
 
+                # text box rect (same as in draw_takeaway_name)
+                name_box = pygame.Rect(WIDTH//2 - 200, 260, 400, 60)
+                if name_box.collidepoint(event.pos):
+                    input_active = True
+
                 if enter_btn.collidepoint(event.pos):
                     current_screen = "thank_you"
                     thank_you_start_time = pygame.time.get_ticks()
                     current_order.clear()
                     customer_name = ""
+                    input_active = False
 
                 if back_btn.collidepoint(event.pos):
                     current_screen = "order_type"
+                    input_active = False
 
             elif current_screen == "dine_in":
                 enter_btn, table_num = draw_dine_in()
 
                 if enter_btn and enter_btn.collidepoint(event.pos):
-                    tables_available.remove(table_num)
+                    if table_num in tables_available:
+                        tables_available.remove(table_num)
                     current_screen = "thank_you"
                     thank_you_start_time = pygame.time.get_ticks()
                     current_order.clear()
@@ -577,6 +638,18 @@ while running:
 
                 if back_btn.collidepoint(event.pos):
                     current_screen = "order_type"
+
+            elif current_screen == "release_table":
+                tables_rects, back_btn = draw_release_table()
+
+                for t, rect, is_used in tables_rects:
+                    if rect.collidepoint(event.pos) and is_used:
+                        if t not in tables_available:
+                            tables_available.append(t)
+                            tables_available.sort()
+
+                if back_btn.collidepoint(event.pos):
+                    current_screen = "main_menu"
 
     if current_screen == "main_menu":
         title = font_large.render("Cafe Ordering System", True, BLACK)
@@ -624,11 +697,14 @@ while running:
     elif current_screen == "no_tables":
         draw_no_tables()
 
+    elif current_screen == "release_table":
+        draw_release_table()
+
     elif current_screen == "thank_you":
         draw_thank_you()
         if thank_you_start_time and pygame.time.get_ticks() - thank_you_start_time >= 8000:
             current_screen = "main_menu"
 
     pygame.display.update()
-    
+
 pygame.quit()
