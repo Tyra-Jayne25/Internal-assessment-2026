@@ -438,7 +438,7 @@ def draw_release_table():
     used_tables = [t for t in all_tables if t not in tables_available]
 
     start_x = 200
-    start_y = 140
+    start_y = 150
     w, h = 100, 80
     gap_x = 40
     gap_y = 40
