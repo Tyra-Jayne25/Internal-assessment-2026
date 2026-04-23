@@ -25,7 +25,7 @@ MENU = {
     "Beverages": {
         "Cold Drinks": {
             "Iced Coffee": 3.00,
-            "Iced Tea": 2.50,
+            "Apple Juice": 2.50,
             "Lemonade": 2.75,
             "Smoothie": 4.00,
             "Soda": 1.50
@@ -39,18 +39,18 @@ MENU = {
         }
     },
     "Food": {
-        "Snacks": {
+        "Pastries": {
             "Croissant": 2.00,
             "Muffin": 2.50,
             "Scone": 2.25,
-            "Sandwich": 3.00,
-            "Cookie": 1.75
+            "Mince and Cheese pie": 3.00,
+            "Steak and Cheese Pie": 1.75
         },
         "Meals": {
-            "Salad": 5.00,
+            "Eggs Benedict": 5.00,
             "Hot Chips": 4.50,
-            "Quiche": 6.00,
-            "Pasta": 7.50,
+            "Bacon and Eggs": 6.00,
+            "Sandwiches": 7.50,
             "Burger": 8.00
         }
     }
@@ -62,6 +62,7 @@ current_screen = "main_menu"
 current_category = None
 current_subcategory = None
 
+scroll_y = 0
 popup_item = None
 popup_qty = 1
 
@@ -92,7 +93,7 @@ def load_image(filename, fallback_color, size):
 
 # ===== LOAD ALL ITEM IMAGES =====
 iced_coffee_img = load_image("Iced Coffee.png", GREY, (60, 60))
-iced_tea_img = load_image("Iced Tea.png", GREY, (60, 60))
+apple_juice_img = load_image("Apple Juice.png", GREY, (60, 60))
 lemonade_img = load_image("Lemonade.png", GREY, (60, 60))
 smoothie_img = load_image("Smoothie.png", GREY, (60, 60))
 soda_img = load_image("Soda.png", GREY, (60, 60))
@@ -106,13 +107,13 @@ latte_img = load_image("Latte.png", GREY, (60, 60))
 croissant_img = load_image("Croissant.png", GREY, (60, 60))
 muffin_img = load_image("Muffin.png", GREY, (60, 60))
 scone_img = load_image("Scone.png", GREY, (60, 60))
-sandwich_img = load_image("Sandwich.png", GREY, (60, 60))
-cookie_img = load_image("Cookie.png", GREY, (60, 60))
+mince_and_cheese_pie_img = load_image("Mince and Cheese pie.png", GREY, (60, 60))
+steak_and_cheese_pie_img = load_image("Steak and Cheese Pie.png", GREY, (60, 60))
 
-salad_img = load_image("Salad.png", GREY, (60, 60))
+eggs_benedict_img = load_image("Eggs Benedict.png", GREY, (60, 60))
 hot_chips_img = load_image("Hot Chips.png", GREY, (60, 60))
-quiche_img = load_image("Quiche.png", GREY, (60, 60))
-pasta_img = load_image("Pasta.png", GREY, (60, 60))
+bacon_and_eggs_img = load_image("Bacon and Eggs.png", GREY, (60, 60))
+sandwiches_img = load_image("Sandwiches.png", GREY, (60, 60))
 burger_img = load_image("Burger.png", GREY, (60, 60))
 
 # ===== NEW PLACEHOLDER IMAGES =====
@@ -122,7 +123,7 @@ dinein_img = load_image("Dine-In.png", GREY, (150, 150))
 # ===== MAP ITEM NAMES TO IMAGES =====
 ITEM_IMAGES = {
     "Iced Coffee": iced_coffee_img,
-    "Iced Tea": iced_tea_img,
+    "Apple Juice": apple_juice_img,
     "Lemonade": lemonade_img,
     "Smoothie": smoothie_img,
     "Soda": soda_img,
@@ -134,12 +135,12 @@ ITEM_IMAGES = {
     "Croissant": croissant_img,
     "Muffin": muffin_img,
     "Scone": scone_img,
-    "Sandwich": sandwich_img,
-    "Cookie": cookie_img,
-    "Salad": salad_img,
+    "Mince and Cheese pie": mince_and_cheese_pie_img,
+    "Steak and Cheese Pie": steak_and_cheese_pie_img,
+    "Eggs Benedict": eggs_benedict_img,
     "Hot Chips": hot_chips_img,
-    "Quiche": quiche_img,
-    "Pasta": pasta_img,
+    "Bacon and Eggs": bacon_and_eggs_img,
+    "Sandwiches": sandwiches_img,
     "Burger": burger_img
 }
 
@@ -173,6 +174,8 @@ def draw_sidebar():
 
 # ===== ITEM GRID (3 per row) =====
 def draw_item_grid():
+    global scroll_y
+
     if not current_subcategory:
         return []
 
@@ -180,26 +183,22 @@ def draw_item_grid():
     item_boxes = []
 
     x = 230
-    y = 160
-    count = 0
+    y = 160 + scroll_y   # apply scrolling
 
     for item, price in items.items():
-        box = pygame.Rect(x, y, 200, 140)
+        # bigger box, equal size for all items
+        box = pygame.Rect(x, y, 500, 90)
         pygame.draw.rect(screen, LIGHT_GREY, box)
 
-        screen.blit(ITEM_IMAGES[item], (x + 10, y + 10))
+        # item image
+        screen.blit(ITEM_IMAGES[item], (x + 10, y + 15))
 
-        screen.blit(font_small.render(item, True, BLACK), (x + 80, y + 15))
-        screen.blit(font_small.render(f"${price:.2f}", True, BLACK), (x + 80, y + 50))
+        # item name + price
+        screen.blit(font_small.render(item, True, BLACK), (x + 90, y + 15))
+        screen.blit(font_small.render(f"${price:.2f}", True, BLACK), (x + 90, y + 50))
 
         item_boxes.append((item, box))
-
-        count += 1
-        if count % 3 == 0:
-            x = 230
-            y += 160
-        else:
-            x += 220
+        y += 110  # spacing between items
 
     return item_boxes
 
@@ -479,10 +478,20 @@ while running:
     screen.fill(WHITE)
 
     for event in pygame.event.get():
+
+        # Quit event (must be FIRST)
         if event.type == pygame.QUIT:
             running = False
 
-        # TAKEAWAY NAME TYPING (only when active)
+        # Scroll wheel handling for ordering screen
+        if current_screen == "ordering":
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 4:   # scroll up
+                    scroll_y = min(scroll_y + 30, 0)
+                if event.button == 5:   # scroll down
+                    scroll_y -= 30
+
+        # TAKEAWAY NAME TYPING
         if current_screen == "takeaway_name" and event.type == pygame.KEYDOWN and input_active:
             if event.key == pygame.K_BACKSPACE:
                 customer_name = customer_name[:-1]
@@ -493,8 +502,10 @@ while running:
             else:
                 customer_name += event.unicode
 
+        # MOUSE CLICK HANDLING
         if event.type == pygame.MOUSEBUTTONDOWN:
 
+            # MAIN MENU
             if current_screen == "main_menu":
                 start_btn = draw_button("Start New Order", 350, 300, 300, 70)
                 release_btn = draw_button("Release Table", 350, 380, 300, 70)
@@ -509,6 +520,7 @@ while running:
                 if quit_btn.collidepoint(event.pos):
                     running = False
 
+            # ORDERING SCREEN
             elif current_screen == "ordering":
 
                 bev_btn, food_btn, sub_btns = draw_sidebar()
@@ -525,6 +537,7 @@ while running:
                     if rect.collidepoint(event.pos):
                         current_subcategory = sub
 
+                # POPUP HANDLING
                 if popup_item is not None:
                     close_btn, minus_btn, plus_btn, add_btn = draw_popup()
 
@@ -550,6 +563,7 @@ while running:
 
                     continue
 
+                # OPEN POPUP
                 if popup_item is None and current_subcategory:
                     for item, rect in item_boxes:
                         if rect.collidepoint(event.pos):
@@ -557,6 +571,7 @@ while running:
                             popup_qty = 1
                             break
 
+                # BOTTOM BUTTONS
                 see_btn = draw_button("See Order", 260, HEIGHT - 72, 200, 55, BLUE_DARK)
                 cancel_btn = draw_button("Cancel Order", 480, HEIGHT - 72, 200, 55, BLUE_DARK)
                 complete_btn = draw_button("Complete Order", 700, HEIGHT - 72, 230, 55, BLUE_DARK)
@@ -573,11 +588,13 @@ while running:
                 if complete_btn.collidepoint(event.pos):
                     current_screen = "complete_review"
 
+            # ORDER SUMMARY
             elif current_screen == "order_summary":
                 back_btn = draw_order_summary()
                 if back_btn.collidepoint(event.pos):
                     current_screen = "ordering"
 
+            # COMPLETE REVIEW
             elif current_screen == "complete_review":
                 continue_btn, back_btn = draw_complete_order()
 
@@ -587,6 +604,7 @@ while running:
                 if back_btn.collidepoint(event.pos):
                     current_screen = "ordering"
 
+            # ORDER TYPE
             elif current_screen == "order_type":
                 dine_rect, take_rect, back_btn = draw_order_type()
 
@@ -598,16 +616,15 @@ while running:
 
                 if take_rect.collidepoint(event.pos):
                     current_screen = "takeaway_name"
-                    # reset input state
                     input_active = False
 
                 if back_btn.collidepoint(event.pos):
                     current_screen = "complete_review"
 
+            # TAKEAWAY NAME
             elif current_screen == "takeaway_name":
                 enter_btn, back_btn = draw_takeaway_name()
 
-                # text box rect (same as in draw_takeaway_name)
                 name_box = pygame.Rect(WIDTH//2 - 200, 260, 400, 60)
                 if name_box.collidepoint(event.pos):
                     input_active = True
@@ -623,6 +640,7 @@ while running:
                     current_screen = "order_type"
                     input_active = False
 
+            # DINE IN
             elif current_screen == "dine_in":
                 enter_btn, table_num = draw_dine_in()
 
@@ -633,12 +651,14 @@ while running:
                     thank_you_start_time = pygame.time.get_ticks()
                     current_order.clear()
 
+            # NO TABLES
             elif current_screen == "no_tables":
                 back_btn = draw_no_tables()
 
                 if back_btn.collidepoint(event.pos):
                     current_screen = "order_type"
 
+            # RELEASE TABLE
             elif current_screen == "release_table":
                 tables_rects, back_btn = draw_release_table()
 
@@ -650,6 +670,8 @@ while running:
 
                 if back_btn.collidepoint(event.pos):
                     current_screen = "main_menu"
+
+    # ===== SCREEN DRAWING =====
 
     if current_screen == "main_menu":
         title = font_large.render("Cafe Ordering System", True, BLACK)
