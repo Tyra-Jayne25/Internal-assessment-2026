@@ -700,7 +700,7 @@ while running:
         bev_btn, food_btn, sub_btns = draw_sidebar()
 
         # TOP BAR (behind subcategory buttons)
-        pygame.draw.rect(screen, WHITE, (200, 0, WIDTH - 200, 140))
+        pygame.draw.rect(screen, BLUE, (200, 0, WIDTH - 200, 140))
 
         # redraw subcategory buttons on top of bar
         x = 230
@@ -716,7 +716,7 @@ while running:
         item_boxes = draw_item_grid()
 
         # BOTTOM BAR (behind 3 buttons)
-        pygame.draw.rect(screen, WHITE, (200, HEIGHT - 90, WIDTH - 200, 90))
+        pygame.draw.rect(screen, BLUE, (200, HEIGHT - 90, WIDTH - 200, 90))
 
         total_cost = sum(
             MENU[cat][sub][item] * qty
