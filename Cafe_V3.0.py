@@ -62,7 +62,7 @@ current_screen = "main_menu"
 current_category = None
 current_subcategory = None
 
-scroll_y = 0
+scroll_y = 0          # scroll offset for item list
 popup_item = None
 popup_qty = 1
 
@@ -172,7 +172,7 @@ def draw_sidebar():
 
     return bev_btn, food_btn, sub_buttons
 
-# ===== ITEM GRID (3 per row) =====
+# ===== ITEM LIST WITH SCROLLING =====
 def draw_item_grid():
     global scroll_y
 
@@ -183,22 +183,32 @@ def draw_item_grid():
     item_boxes = []
 
     x = 230
-    y = 160 + scroll_y   # apply scrolling
+    y_start = 160
+    y = y_start + scroll_y
+
+    # compute simple lower scroll limit so list doesn't go too far up
+    total_height = len(items) * 110
+    visible_bottom = HEIGHT - 120  # keep clear of bottom button bar
+    min_scroll = min(0, visible_bottom - (y_start + total_height))
+
+    # clamp scroll_y
+    if scroll_y > 0:
+        scroll_y = 0
+        y = y_start
+    if scroll_y < min_scroll:
+        scroll_y = min_scroll
+        y = y_start + scroll_y
 
     for item, price in items.items():
-        # bigger box, equal size for all items
         box = pygame.Rect(x, y, 500, 90)
         pygame.draw.rect(screen, LIGHT_GREY, box)
 
-        # item image
         screen.blit(ITEM_IMAGES[item], (x + 10, y + 15))
-
-        # item name + price
         screen.blit(font_small.render(item, True, BLACK), (x + 90, y + 15))
         screen.blit(font_small.render(f"${price:.2f}", True, BLACK), (x + 90, y + 50))
 
         item_boxes.append((item, box))
-        y += 110  # spacing between items
+        y += 110
 
     return item_boxes
 
@@ -479,17 +489,19 @@ while running:
 
     for event in pygame.event.get():
 
-        # Quit event (must be FIRST)
+        # Quit
         if event.type == pygame.QUIT:
             running = False
 
-        # Scroll wheel handling for ordering screen
-        if current_screen == "ordering":
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 4:   # scroll up
-                    scroll_y = min(scroll_y + 30, 0)
-                if event.button == 5:   # scroll down
-                    scroll_y -= 30
+        # Scroll wheel handling for ordering screen (ONLY scroll, no clicks)
+        if current_screen == "ordering" and event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 4:   # scroll up
+                scroll_y += 30
+            elif event.button == 5: # scroll down
+                scroll_y -= 30
+            # prevent scroll wheel from acting like a click
+            if event.button in (4, 5):
+                continue
 
         # TAKEAWAY NAME TYPING
         if current_screen == "takeaway_name" and event.type == pygame.KEYDOWN and input_active:
@@ -502,8 +514,8 @@ while running:
             else:
                 customer_name += event.unicode
 
-        # MOUSE CLICK HANDLING
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        # LEFT CLICK HANDLING ONLY
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
 
             # MAIN MENU
             if current_screen == "main_menu":
@@ -528,14 +540,17 @@ while running:
                 if bev_btn.collidepoint(event.pos):
                     current_category = "Beverages"
                     current_subcategory = None
+                    scroll_y = 0
 
                 if food_btn.collidepoint(event.pos):
                     current_category = "Food"
                     current_subcategory = None
+                    scroll_y = 0
 
                 for sub, rect in sub_btns:
                     if rect.collidepoint(event.pos):
                         current_subcategory = sub
+                        scroll_y = 0
 
                 # POPUP HANDLING
                 if popup_item is not None:
@@ -572,9 +587,9 @@ while running:
                             break
 
                 # BOTTOM BUTTONS
-                see_btn = draw_button("See Order", 260, HEIGHT - 72, 200, 55, BLUE_DARK)
-                cancel_btn = draw_button("Cancel Order", 480, HEIGHT - 72, 200, 55, BLUE_DARK)
-                complete_btn = draw_button("Complete Order", 700, HEIGHT - 72, 230, 55, BLUE_DARK)
+                see_btn = pygame.Rect(260, HEIGHT - 72, 200, 55)
+                cancel_btn = pygame.Rect(480, HEIGHT - 72, 200, 55)
+                complete_btn = pygame.Rect(700, HEIGHT - 72, 230, 55)
 
                 if see_btn.collidepoint(event.pos):
                     current_screen = "order_summary"
@@ -583,6 +598,7 @@ while running:
                     current_order = {}
                     current_category = None
                     current_subcategory = None
+                    scroll_y = 0
                     current_screen = "main_menu"
 
                 if complete_btn.collidepoint(event.pos):
@@ -682,7 +698,25 @@ while running:
 
     elif current_screen == "ordering":
         bev_btn, food_btn, sub_btns = draw_sidebar()
+
+        # TOP BAR (behind subcategory buttons)
+        pygame.draw.rect(screen, WHITE, (200, 0, WIDTH - 200, 140))
+
+        # redraw subcategory buttons on top of bar
+        x = 230
+        y = 80
+        sub_btns = []
+        if current_category:
+            for sub in MENU[current_category]:
+                rect = draw_button(sub, x, y, 180, 50, DARK_GREY)
+                sub_btns.append((sub, rect))
+                x += 200
+
+        # ITEM LIST
         item_boxes = draw_item_grid()
+
+        # BOTTOM BAR (behind 3 buttons)
+        pygame.draw.rect(screen, WHITE, (200, HEIGHT - 90, WIDTH - 200, 90))
 
         total_cost = sum(
             MENU[cat][sub][item] * qty
