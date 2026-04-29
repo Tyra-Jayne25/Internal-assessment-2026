@@ -25,24 +25,24 @@ MENU = {
     "Beverages": {
         "Cold Drinks": {
             "Iced Coffee": 3.00,
-            "Apple Juice": 2.50,
-            "Lemonade": 2.75,
+            "Orange Juice": 2.50,
+            "Water": 2.75,
             "Smoothie": 4.00,
             "Soda": 1.50
         },
         "Hot Drinks": {
-            "Coffee": 2.50,
-            "Tea": 2.00,
+            "Espresso": 2.50,
+            "Americano": 2.00,
             "Hot Chocolate": 3.00,
-            "Espresso": 2.75,
-            "Latte": 3.50
+            "Flat White": 2.75,
+            "Tea": 3.50
         }
     },
     "Food": {
         "Pastries": {
             "Croissant": 2.00,
             "Muffin": 2.50,
-            "Scone": 2.25,
+            "Sausage Roll": 2.25,
             "Mince and Cheese pie": 3.00,
             "Steak and Cheese Pie": 1.75
         },
@@ -92,20 +92,20 @@ def load_image(filename, fallback_color, size):
 
 # ===== LOAD ALL ITEM IMAGES =====
 iced_coffee_img = load_image("Iced Coffee.png", GREY, (60, 60))
-apple_juice_img = load_image("Apple Juice.png", GREY, (60, 60))
-lemonade_img = load_image("Lemonade.png", GREY, (60, 60))
+orange_juice_img = load_image("Orange Juice.png", GREY, (60, 60))
+water_img = load_image("Water.png", GREY, (60, 60))
 smoothie_img = load_image("Smoothie.png", GREY, (60, 60))
 soda_img = load_image("Soda.png", GREY, (60, 60))
 
-coffee_img = load_image("Coffee.png", GREY, (60, 60))
-tea_img = load_image("Tea.png", GREY, (60, 60))
-hot_chocolate_img = load_image("Hot Chocolate.png", GREY, (60, 60))
 espresso_img = load_image("Espresso.png", GREY, (60, 60))
-latte_img = load_image("Latte.png", GREY, (60, 60))
+americano_img = load_image("Americano.png", GREY, (60, 60))
+hot_chocolate_img = load_image("Hot Chocolate.png", GREY, (60, 60))
+flat_white_img = load_image("Flat White.png", GREY, (60, 60))
+tea_img = load_image("Tea.png", GREY, (60, 60))
 
 croissant_img = load_image("Croissant.png", GREY, (60, 60))
 muffin_img = load_image("Muffin.png", GREY, (60, 60))
-scone_img = load_image("Scone.png", GREY, (60, 60))
+sausage_roll_img = load_image("Sausage Roll.png", GREY, (60, 60))
 mince_and_cheese_pie_img = load_image("Mince and Cheese pie.png", GREY, (60, 60))
 steak_and_cheese_pie_img = load_image("Steak and Cheese Pie.png", GREY, (60, 60))
 
@@ -121,18 +121,18 @@ dinein_img = load_image("Dine-In.png", GREY, (150, 150))
 # ===== MAP ITEM NAMES TO IMAGES =====
 ITEM_IMAGES = {
     "Iced Coffee": iced_coffee_img,
-    "Apple Juice": apple_juice_img,
-    "Lemonade": lemonade_img,
+    "Orange Juice": orange_juice_img,
+    "Water": water_img,
     "Smoothie": smoothie_img,
     "Soda": soda_img,
-    "Coffee": coffee_img,
-    "Tea": tea_img,
-    "Hot Chocolate": hot_chocolate_img,
     "Espresso": espresso_img,
-    "Latte": latte_img,
+    "Americano": americano_img,
+    "Hot Chocolate": hot_chocolate_img,
+    "Flat White": flat_white_img,
+    "Tea": tea_img,
     "Croissant": croissant_img,
     "Muffin": muffin_img,
-    "Scone": scone_img,
+    "Sausage Roll": sausage_roll_img,
     "Mince and Cheese pie": mince_and_cheese_pie_img,
     "Steak and Cheese Pie": steak_and_cheese_pie_img,
     "Eggs Benedict": eggs_benedict_img,
