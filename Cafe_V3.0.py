@@ -254,7 +254,7 @@ def draw_popup():
 
     return close_btn, minus_btn, plus_btn, add_btn
 
-# ===== ORDER SUMMARY =====
+# ===== ORDER SUMMARY (WITH DELETE BUTTONS) =====
 def draw_order_summary():
     screen.fill(WHITE)
 
@@ -268,6 +268,8 @@ def draw_order_summary():
     y = 140
     count = 0
 
+    delete_buttons = []
+
     for item, qty in items:
         price = None
         for cat in MENU:
@@ -277,7 +279,17 @@ def draw_order_summary():
 
         x = col1_x if count % 2 == 0 else col2_x
 
-        screen.blit(font_small.render(f"{item} x{qty} - ${price * qty:.2f}", True, BLACK), (x, y))
+        text_surf = font_small.render(f"{item} x{qty} - ${price * qty:.2f}", True, BLACK)
+        screen.blit(text_surf, (x, y))
+
+        # Delete button for each item
+        del_btn = pygame.Rect(x + 320, y - 2, 90, 32)
+        pygame.draw.rect(screen, RED, del_btn)
+        del_label = font_small.render("Delete", True, WHITE)
+        screen.blit(del_label, (del_btn.x + (del_btn.width - del_label.get_width()) // 2,
+                                del_btn.y + (del_btn.height - del_label.get_height()) // 2))
+
+        delete_buttons.append((item, del_btn))
 
         if count % 2 == 1:
             y += 40
@@ -294,18 +306,103 @@ def draw_order_summary():
 
     screen.blit(font_medium.render(f"Total: ${total_cost:.2f}", True, BLACK), (60, 570))
 
-    return draw_button("Back", 800, 560, 150, 50)
+    back_btn = draw_button("Back", 800, 560, 150, 50)
 
-# ===== THANK YOU SCREEN =====
-def draw_thank_you():
+    return back_btn, delete_buttons
+
+# ===== THANK YOU SCREEN FOR TAKEAWAY =====
+def draw_thank_you_takeaway():
     screen.fill(WHITE)
-    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
 
+    # Header
+    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
     title = font_large.render("Cafe Name", True, WHITE)
     screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
 
-    msg = font_medium.render("Thank You for Ordering at our Cafe!", True, BLACK)
-    screen.blit(msg, (WIDTH//2 - msg.get_width()//2, HEIGHT//2 - 20))
+    # Order title
+    order_title = font_medium.render("Order", True, BLACK)
+    screen.blit(order_title, (WIDTH//2 - order_title.get_width()//2, 90))
+
+    # Customer name
+    name_label = font_medium.render(f"Name: {customer_name}", True, BLACK)
+    screen.blit(name_label, (WIDTH//2 - name_label.get_width()//2, 140))
+
+    # Order list
+    y = 200
+    for item, qty in current_order.items():
+        if qty > 0:
+            # find price
+            price = None
+            for cat in MENU:
+                for sub in MENU[cat]:
+                    if item in MENU[cat][sub]:
+                        price = MENU[cat][sub][item]
+
+            line = font_small.render(f"{qty} {item}   ${price * qty:.2f}", True, BLACK)
+            screen.blit(line, (WIDTH//2 - line.get_width()//2, y))
+            y += 35
+
+    # Total cost
+    total_cost = sum(
+        MENU[cat][sub][item] * qty
+        for cat in MENU
+        for sub in MENU[cat]
+        for item, qty in current_order.items()
+        if item in MENU[cat][sub]
+    )
+    total_label = font_medium.render(f"Total cost: ${total_cost:.2f}", True, BLACK)
+    screen.blit(total_label, (WIDTH//2 - total_label.get_width()//2, y + 20))
+
+    # Thank you message
+    thanks = font_medium.render("Thank you for ordering at our Cafe!", True, BLACK)
+    screen.blit(thanks, (WIDTH//2 - thanks.get_width()//2, y + 80))
+
+
+# ===== THANK YOU SCREEN FOR DINE-IN =====
+def draw_thank_you_dinein():
+    screen.fill(WHITE)
+
+    # Header
+    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
+    title = font_large.render("Cafe Name", True, WHITE)
+    screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
+
+    # Order title
+    order_title = font_medium.render("Order", True, BLACK)
+    screen.blit(order_title, (WIDTH//2 - order_title.get_width()//2, 90))
+
+    # Table number
+    table_label = font_medium.render(f"Table no.: {assigned_table}", True, BLACK)
+    screen.blit(table_label, (WIDTH//2 - table_label.get_width()//2, 140))
+
+    # Order list
+    y = 200
+    for item, qty in current_order.items():
+        if qty > 0:
+            price = None
+            for cat in MENU:
+                for sub in MENU[cat]:
+                    if item in MENU[cat][sub]:
+                        price = MENU[cat][sub][item]
+
+            line = font_small.render(f"{qty} {item}   ${price * qty:.2f}", True, BLACK)
+            screen.blit(line, (WIDTH//2 - line.get_width()//2, y))
+            y += 35
+
+    # Total cost
+    total_cost = sum(
+        MENU[cat][sub][item] * qty
+        for cat in MENU
+        for sub in MENU[cat]
+        for item, qty in current_order.items()
+        if item in MENU[cat][sub]
+    )
+    total_label = font_medium.render(f"Total cost: ${total_cost:.2f}", True, BLACK)
+    screen.blit(total_label, (WIDTH//2 - total_label.get_width()//2, y + 20))
+
+    # Thank you message
+    thanks = font_medium.render("Thank you for ordering at our Cafe!", True, BLACK)
+    screen.blit(thanks, (WIDTH//2 - thanks.get_width()//2, y + 80))
 
 # ===== UPDATED ORDER TYPE SCREEN =====
 def draw_order_type():
@@ -378,7 +475,7 @@ def draw_dine_in():
     enter_btn = draw_button("Enter", WIDTH//2 - 150, 450, 300, 70)
     return enter_btn, table_num
 
-# ===== UPDATED REVIEW ORDER SCREEN =====
+# ===== UPDATED REVIEW ORDER SCREEN (WITH DELETE BUTTONS) =====
 def draw_complete_order():
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
@@ -393,6 +490,8 @@ def draw_complete_order():
     y = 140
     count = 0
 
+    delete_buttons = []
+
     for item, qty in items:
         price = None
         for cat in MENU:
@@ -401,7 +500,16 @@ def draw_complete_order():
                     price = MENU[cat][sub][item]
 
         x = col1_x if count % 2 == 0 else col2_x
-        screen.blit(font_small.render(f"{item} x{qty} - ${price * qty:.2f}", True, BLACK), (x, y))
+        text_surf = font_small.render(f"{item} x{qty} - ${price * qty:.2f}", True, BLACK)
+        screen.blit(text_surf, (x, y))
+
+        del_btn = pygame.Rect(x + 260, y - 2, 90, 32)
+        pygame.draw.rect(screen, RED, del_btn)
+        del_label = font_small.render("Delete", True, WHITE)
+        screen.blit(del_label, (del_btn.x + (del_btn.width - del_label.get_width()) // 2,
+                                del_btn.y + (del_btn.height - del_label.get_height()) // 2))
+
+        delete_buttons.append((item, del_btn))
 
         if count % 2 == 1:
             y += 40
@@ -420,7 +528,7 @@ def draw_complete_order():
     continue_btn = draw_button("Continue", WIDTH//2 - 100, 560, 200, 50)
     back_btn = draw_button("Back", WIDTH - 200, 560, 150, 50)
 
-    return continue_btn, back_btn
+    return continue_btn, back_btn, delete_buttons
 
 # ===== NO TABLES SCREEN =====
 def draw_no_tables():
@@ -606,13 +714,35 @@ while running:
 
             # ORDER SUMMARY
             elif current_screen == "order_summary":
-                back_btn = draw_order_summary()
+                back_btn, delete_buttons = draw_order_summary()
+
+                # handle delete clicks
+                deleted = False
+                for item, btn in delete_buttons:
+                    if btn.collidepoint(event.pos):
+                        if item in current_order:
+                            del current_order[item]
+                        deleted = True
+                        break
+                if deleted:
+                    continue
+
                 if back_btn.collidepoint(event.pos):
                     current_screen = "ordering"
 
             # COMPLETE REVIEW
             elif current_screen == "complete_review":
-                continue_btn, back_btn = draw_complete_order()
+                continue_btn, back_btn, delete_buttons = draw_complete_order()
+
+                deleted = False
+                for item, btn in delete_buttons:
+                    if btn.collidepoint(event.pos):
+                        if item in current_order:
+                            del current_order[item]
+                        deleted = True
+                        break
+                if deleted:
+                    continue
 
                 if continue_btn.collidepoint(event.pos):
                     current_screen = "order_type"
@@ -646,7 +776,7 @@ while running:
                     input_active = True
 
                 if enter_btn.collidepoint(event.pos):
-                    current_screen = "thank_you"
+                    current_screen = "thank_you_takeaway"
                     thank_you_start_time = pygame.time.get_ticks()
                     current_order.clear()
                     customer_name = ""
@@ -663,7 +793,8 @@ while running:
                 if enter_btn and enter_btn.collidepoint(event.pos):
                     if table_num in tables_available:
                         tables_available.remove(table_num)
-                    current_screen = "thank_you"
+                        assigned_table = table_num
+                    current_screen = "thank_you_dinein"
                     thank_you_start_time = pygame.time.get_ticks()
                     current_order.clear()
 
@@ -756,9 +887,13 @@ while running:
     elif current_screen == "release_table":
         draw_release_table()
 
-    elif current_screen == "thank_you":
-        draw_thank_you()
-        if thank_you_start_time and pygame.time.get_ticks() - thank_you_start_time >= 8000:
+    elif current_screen == "thank_you_takeaway":
+        draw_thank_you_takeaway()
+
+    elif current_screen == "thank_you_dinein":
+        draw_thank_you_dinein()
+    
+    if thank_you_start_time and pygame.time.get_ticks() - thank_you_start_time >= 8000:
             current_screen = "main_menu"
 
     pygame.display.update()
