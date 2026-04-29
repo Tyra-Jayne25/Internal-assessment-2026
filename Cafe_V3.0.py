@@ -62,17 +62,16 @@ current_screen = "main_menu"
 current_category = None
 current_subcategory = None
 
-scroll_y = 0          # scroll offset for item list
+scroll_y = 0
 popup_item = None
 popup_qty = 1
 
-# ===== NEW GLOBALS FOR VERSION 2.5 =====
 customer_name = ""
 tables_available = [1,2,3,4,5,6,7,8,9,10]
 assigned_table = None
 
-# text input active flag for takeaway
 input_active = False
+thank_you_start_time = None
 
 # ===== GUI SETUP =====
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -116,7 +115,6 @@ bacon_and_eggs_img = load_image("Bacon and Eggs.png", GREY, (60, 60))
 sandwiches_img = load_image("Sandwiches.png", GREY, (60, 60))
 burger_img = load_image("Burger.png", GREY, (60, 60))
 
-# ===== NEW PLACEHOLDER IMAGES =====
 takeaway_img = load_image("Takeaway.png", GREY, (150, 150))
 dinein_img = load_image("Dine-In.png", GREY, (150, 150))
 
@@ -172,7 +170,7 @@ def draw_sidebar():
 
     return bev_btn, food_btn, sub_buttons
 
-# ===== ITEM LIST WITH SCROLLING =====
+# ===== ITEM LIST WITH SCROLLING (CLIPPED BEHIND BARS) =====
 def draw_item_grid():
     global scroll_y
 
@@ -190,11 +188,9 @@ def draw_item_grid():
     visible_bottom = HEIGHT - 120
     min_scroll = min(0, visible_bottom - (y_start + total_height))
 
-    # clamp scroll
     scroll_y = max(min_scroll, min(0, scroll_y))
     y = y_start + scroll_y
 
-    # CLIP REGION so items cannot draw above the top bar
     clip_rect = pygame.Rect(200, 140, WIDTH - 200, HEIGHT - 230)
     screen.set_clip(clip_rect)
 
@@ -254,7 +250,7 @@ def draw_popup():
 
     return close_btn, minus_btn, plus_btn, add_btn
 
-# ===== ORDER SUMMARY (WITH DELETE BUTTONS) =====
+# ===== ORDER SUMMARY (RESTORED SPACING) =====
 def draw_order_summary():
     screen.fill(WHITE)
 
@@ -282,7 +278,7 @@ def draw_order_summary():
         text_surf = font_small.render(f"{item} x{qty} - ${price * qty:.2f}", True, BLACK)
         screen.blit(text_surf, (x, y))
 
-        del_btn = pygame.Rect(x + 320, y - 2, 90, 32)
+        del_btn = pygame.Rect(x + 260, y - 2, 90, 32)
         pygame.draw.rect(screen, RED, del_btn)
         del_label = font_small.render("Delete", True, WHITE)
         screen.blit(del_label, (del_btn.x + (del_btn.width - del_label.get_width()) // 2,
@@ -291,7 +287,7 @@ def draw_order_summary():
         delete_buttons.append((item, del_btn))
 
         if count % 2 == 1:
-            y += 65  # more spacing between rows
+            y += 40
 
         count += 1
 
@@ -309,6 +305,7 @@ def draw_order_summary():
 
     return back_btn, delete_buttons
 
+# ===== THANK YOU SCREEN FOR TAKEAWAY (LIGHT BACKGROUND PANEL) =====
 def draw_thank_you_takeaway():
     screen.fill(WHITE)
 
@@ -316,21 +313,19 @@ def draw_thank_you_takeaway():
     title = font_large.render("Cafe Name", True, WHITE)
     screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
 
-    # Receipt box
-    box_w = 600
-    box_h = 400
-    box_x = WIDTH//2 - box_w//2
-    box_y = 120
+    panel_w = 600
+    panel_h = 400
+    panel_x = WIDTH//2 - panel_w//2
+    panel_y = 120
 
-    pygame.draw.rect(screen, WHITE, (box_x, box_y, box_w, box_h))
-    pygame.draw.rect(screen, BLACK, (box_x, box_y, box_w, box_h), 3)
+    pygame.draw.rect(screen, LIGHT_GREY, (panel_x, panel_y, panel_w, panel_h))
 
-    # Name
     name_label = font_medium.render(f"Name: {customer_name}", True, BLACK)
-    screen.blit(name_label, (box_x + 20, box_y + 20))
+    screen.blit(name_label, (panel_x + 20, panel_y + 20))
 
-    # Order list
-    y = box_y + 80
+    pygame.draw.line(screen, BLACK, (panel_x + 20, panel_y + 60), (panel_x + panel_w - 20, panel_y + 60), 2)
+
+    y = panel_y + 80
     for item, qty in current_order.items():
         if qty > 0:
             for cat in MENU:
@@ -339,10 +334,9 @@ def draw_thank_you_takeaway():
                         price = MENU[cat][sub][item]
 
             line = font_small.render(f"{qty} {item}   ${price * qty:.2f}", True, BLACK)
-            screen.blit(line, (box_x + 20, y))
+            screen.blit(line, (panel_x + 20, y))
             y += 35
 
-    # Total
     total_cost = sum(
         MENU[cat][sub][item] * qty
         for cat in MENU
@@ -351,13 +345,12 @@ def draw_thank_you_takeaway():
         if item in MENU[cat][sub]
     )
     total_label = font_medium.render(f"Total cost: ${total_cost:.2f}", True, BLACK)
-    screen.blit(total_label, (box_x + 20, y + 20))
+    screen.blit(total_label, (panel_x + 20, y + 20))
 
-    # Thank you message
     thanks = font_medium.render("Thank you for ordering at our Cafe!", True, BLACK)
-    screen.blit(thanks, (WIDTH//2 - thanks.get_width()//2, box_y + box_h + 30))
+    screen.blit(thanks, (WIDTH//2 - thanks.get_width()//2, panel_y + panel_h + 30))
 
-# ===== THANK YOU SCREEN FOR DINE-IN =====
+# ===== THANK YOU SCREEN FOR DINE-IN (LIGHT BACKGROUND PANEL) =====
 def draw_thank_you_dinein():
     screen.fill(WHITE)
 
@@ -365,21 +358,19 @@ def draw_thank_you_dinein():
     title = font_large.render("Cafe Name", True, WHITE)
     screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
 
-    # Receipt box
-    box_w = 600
-    box_h = 400
-    box_x = WIDTH//2 - box_w//2
-    box_y = 120
+    panel_w = 600
+    panel_h = 400
+    panel_x = WIDTH//2 - panel_w//2
+    panel_y = 120
 
-    pygame.draw.rect(screen, WHITE, (box_x, box_y, box_w, box_h))
-    pygame.draw.rect(screen, BLACK, (box_x, box_y, box_w, box_h), 3)
+    pygame.draw.rect(screen, LIGHT_GREY, (panel_x, panel_y, panel_w, panel_h))
 
-    # Table number
     table_label = font_medium.render(f"Table no.: {assigned_table}", True, BLACK)
-    screen.blit(table_label, (box_x + 20, box_y + 20))
+    screen.blit(table_label, (panel_x + 20, panel_y + 20))
 
-    # Order list
-    y = box_y + 80
+    pygame.draw.line(screen, BLACK, (panel_x + 20, panel_y + 60), (panel_x + panel_w - 20, panel_y + 60), 2)
+
+    y = panel_y + 80
     for item, qty in current_order.items():
         if qty > 0:
             for cat in MENU:
@@ -388,10 +379,9 @@ def draw_thank_you_dinein():
                         price = MENU[cat][sub][item]
 
             line = font_small.render(f"{qty} {item}   ${price * qty:.2f}", True, BLACK)
-            screen.blit(line, (box_x + 20, y))
+            screen.blit(line, (panel_x + 20, y))
             y += 35
 
-    # Total
     total_cost = sum(
         MENU[cat][sub][item] * qty
         for cat in MENU
@@ -400,11 +390,10 @@ def draw_thank_you_dinein():
         if item in MENU[cat][sub]
     )
     total_label = font_medium.render(f"Total cost: ${total_cost:.2f}", True, BLACK)
-    screen.blit(total_label, (box_x + 20, y + 20))
+    screen.blit(total_label, (panel_x + 20, y + 20))
 
-    # Thank you message
     thanks = font_medium.render("Thank you for ordering at our Cafe!", True, BLACK)
-    screen.blit(thanks, (WIDTH//2 - thanks.get_width()//2, box_y + box_h + 30))
+    screen.blit(thanks, (WIDTH//2 - thanks.get_width()//2, panel_y + panel_h + 30))
 
 # ===== UPDATED ORDER TYPE SCREEN =====
 def draw_order_type():
@@ -477,7 +466,7 @@ def draw_dine_in():
     enter_btn = draw_button("Enter", WIDTH//2 - 150, 450, 300, 70)
     return enter_btn, table_num
 
-# ===== UPDATED REVIEW ORDER SCREEN (WITH DELETE BUTTONS) =====
+# ===== UPDATED REVIEW ORDER SCREEN (RESTORED SPACING) =====
 def draw_complete_order():
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
@@ -514,7 +503,8 @@ def draw_complete_order():
         delete_buttons.append((item, del_btn))
 
         if count % 2 == 1:
-            y += 65
+            y += 40
+
         count += 1
 
     total_cost = sum(
@@ -545,7 +535,7 @@ def draw_no_tables():
     back_btn = draw_button("Back", WIDTH//2 - 150, 450, 300, 70)
     return back_btn
 
-# ===== RELEASE TABLE SCREEN (OPTION A GRID) =====
+# ===== RELEASE TABLE SCREEN =====
 def draw_release_table():
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
@@ -568,16 +558,12 @@ def draw_release_table():
         x = start_x + col * (w + gap_x)
         y = start_y + row * (h + gap_y)
 
-        if t in used_tables:
-            color = RED
-        else:
-            color = GREY
-
+        color = RED if t in used_tables else GREY
         rect = pygame.Rect(x, y, w, h)
         pygame.draw.rect(screen, color, rect)
 
         label = font_medium.render(str(t), True, WHITE if t in used_tables else BLACK)
-        screen.blit(label, (rect.centerx - label.get_width()//1,
+        screen.blit(label, (rect.centerx - label.get_width()//2,
                             rect.centery - label.get_height()//2))
 
         tables_rects.append((t, rect, t in used_tables))
@@ -593,7 +579,7 @@ def draw_release_table():
 def reset_order_state():
     global current_order, current_category, current_subcategory
     global scroll_y, popup_item, popup_qty
-    global customer_name, assigned_table, input_active
+    global customer_name, assigned_table, input_active, thank_you_start_time
 
     current_order = {}
     current_category = None
@@ -604,11 +590,11 @@ def reset_order_state():
     customer_name = ""
     assigned_table = None
     input_active = False
+    thank_you_start_time = None
 
 # ===== MAIN LOOP =====
 running = True
 item_boxes = []
-thank_you_start_time = None
 
 while running:
     screen.fill(WHITE)
@@ -626,12 +612,10 @@ while running:
             if event.button in (4, 5):
                 continue
 
-        # TAKEAWAY NAME TYPING
         if current_screen == "takeaway_name" and event.type == pygame.KEYDOWN and input_active:
             if event.key == pygame.K_BACKSPACE:
                 customer_name = customer_name[:-1]
             elif event.key == pygame.K_RETURN:
-                # just finish typing; clicking Enter button actually proceeds
                 input_active = False
             else:
                 customer_name += event.unicode
@@ -640,9 +624,9 @@ while running:
 
             # MAIN MENU
             if current_screen == "main_menu":
-                start_btn = draw_button("Start New Order", 350, 300, 300, 70)
-                release_btn = draw_button("Release Table", 350, 380, 300, 70)
-                quit_btn = draw_button("Quit", 350, 460, 300, 70)
+                start_btn = pygame.Rect(350, 300, 300, 70)
+                release_btn = pygame.Rect(350, 380, 300, 70)
+                quit_btn = pygame.Rect(350, 460, 300, 70)
 
                 if start_btn.collidepoint(event.pos):
                     reset_order_state()
@@ -654,7 +638,7 @@ while running:
                 if quit_btn.collidepoint(event.pos):
                     running = False
 
-            # ORDERING SCREEN
+            # ORDERING
             elif current_screen == "ordering":
 
                 bev_btn, food_btn, sub_btns = draw_sidebar()
@@ -699,7 +683,11 @@ while running:
 
                     continue
 
-                if popup_item is None and current_subcategory:
+                # block clicks on top and bottom bars from hitting items
+                y_click = event.pos[1]
+                in_content_area = (y_click >= 160) and (y_click <= HEIGHT - 120)
+
+                if popup_item is None and current_subcategory and in_content_area:
                     for item, rect in item_boxes:
                         if rect.collidepoint(event.pos):
                             popup_item = item
@@ -724,15 +712,11 @@ while running:
             elif current_screen == "order_summary":
                 back_btn, delete_buttons = draw_order_summary()
 
-                deleted = False
                 for item, btn in delete_buttons:
                     if btn.collidepoint(event.pos):
                         if item in current_order:
                             del current_order[item]
-                        deleted = True
                         break
-                if deleted:
-                    continue
 
                 if back_btn.collidepoint(event.pos):
                     current_screen = "ordering"
@@ -741,15 +725,11 @@ while running:
             elif current_screen == "complete_review":
                 continue_btn, back_btn, delete_buttons = draw_complete_order()
 
-                deleted = False
                 for item, btn in delete_buttons:
                     if btn.collidepoint(event.pos):
                         if item in current_order:
                             del current_order[item]
-                        deleted = True
                         break
-                if deleted:
-                    continue
 
                 if continue_btn.collidepoint(event.pos):
                     current_screen = "order_type"
@@ -834,6 +814,8 @@ while running:
     elif current_screen == "ordering":
         bev_btn, food_btn, sub_btns = draw_sidebar()
 
+        item_boxes = draw_item_grid()
+
         pygame.draw.rect(screen, BLUE, (200, 0, WIDTH - 200, 140))
 
         x = 230
@@ -844,8 +826,6 @@ while running:
                 rect = draw_button(sub, x, y, 180, 50, DARK_GREY)
                 sub_btns.append((sub, rect))
                 x += 200
-
-        item_boxes = draw_item_grid()
 
         pygame.draw.rect(screen, BLUE, (200, HEIGHT - 90, WIDTH - 200, 90))
 
@@ -888,16 +868,16 @@ while running:
         draw_release_table()
 
     elif current_screen == "thank_you_takeaway":
-     draw_thank_you_takeaway()
-    if thank_you_start_time and pygame.time.get_ticks() - thank_you_start_time >= 8000:
-        reset_order_state()
-        current_screen = "main_menu"
+        draw_thank_you_takeaway()
+        if thank_you_start_time and pygame.time.get_ticks() - thank_you_start_time >= 8000:
+            reset_order_state()
+            current_screen = "main_menu"
 
     elif current_screen == "thank_you_dinein":
-     draw_thank_you_dinein()
-    if thank_you_start_time and pygame.time.get_ticks() - thank_you_start_time >= 8000:
-        reset_order_state()
-        current_screen = "main_menu"
+        draw_thank_you_dinein()
+        if thank_you_start_time and pygame.time.get_ticks() - thank_you_start_time >= 8000:
+            reset_order_state()
+            current_screen = "main_menu"
 
     pygame.display.update()
 
