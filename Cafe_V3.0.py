@@ -190,12 +190,13 @@ def draw_item_grid():
     visible_bottom = HEIGHT - 120
     min_scroll = min(0, visible_bottom - (y_start + total_height))
 
-    if scroll_y > 0:
-        scroll_y = 0
-        y = y_start
-    if scroll_y < min_scroll:
-        scroll_y = min_scroll
-        y = y_start + scroll_y
+    # clamp scroll
+    scroll_y = max(min_scroll, min(0, scroll_y))
+    y = y_start + scroll_y
+
+    # CLIP REGION so items cannot draw above the top bar
+    clip_rect = pygame.Rect(200, 140, WIDTH - 200, HEIGHT - 230)
+    screen.set_clip(clip_rect)
 
     for item, price in items.items():
         box = pygame.Rect(x, y, 500, 90)
@@ -208,6 +209,7 @@ def draw_item_grid():
         item_boxes.append((item, box))
         y += 110
 
+    screen.set_clip(None)
     return item_boxes
 
 # ===== POPUP WINDOW =====
@@ -307,7 +309,6 @@ def draw_order_summary():
 
     return back_btn, delete_buttons
 
-# ===== THANK YOU SCREEN FOR TAKEAWAY =====
 def draw_thank_you_takeaway():
     screen.fill(WHITE)
 
@@ -315,25 +316,33 @@ def draw_thank_you_takeaway():
     title = font_large.render("Cafe Name", True, WHITE)
     screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
 
-    order_title = font_medium.render("Order", True, BLACK)
-    screen.blit(order_title, (WIDTH//2 - order_title.get_width()//2, 90))
+    # Receipt box
+    box_w = 600
+    box_h = 400
+    box_x = WIDTH//2 - box_w//2
+    box_y = 120
 
+    pygame.draw.rect(screen, WHITE, (box_x, box_y, box_w, box_h))
+    pygame.draw.rect(screen, BLACK, (box_x, box_y, box_w, box_h), 3)
+
+    # Name
     name_label = font_medium.render(f"Name: {customer_name}", True, BLACK)
-    screen.blit(name_label, (WIDTH//2 - name_label.get_width()//2, 140))
+    screen.blit(name_label, (box_x + 20, box_y + 20))
 
-    y = 200
+    # Order list
+    y = box_y + 80
     for item, qty in current_order.items():
         if qty > 0:
-            price = None
             for cat in MENU:
                 for sub in MENU[cat]:
                     if item in MENU[cat][sub]:
                         price = MENU[cat][sub][item]
 
             line = font_small.render(f"{qty} {item}   ${price * qty:.2f}", True, BLACK)
-            screen.blit(line, (WIDTH//2 - line.get_width()//2, y))
+            screen.blit(line, (box_x + 20, y))
             y += 35
 
+    # Total
     total_cost = sum(
         MENU[cat][sub][item] * qty
         for cat in MENU
@@ -342,10 +351,11 @@ def draw_thank_you_takeaway():
         if item in MENU[cat][sub]
     )
     total_label = font_medium.render(f"Total cost: ${total_cost:.2f}", True, BLACK)
-    screen.blit(total_label, (WIDTH//2 - total_label.get_width()//2, y + 20))
+    screen.blit(total_label, (box_x + 20, y + 20))
 
+    # Thank you message
     thanks = font_medium.render("Thank you for ordering at our Cafe!", True, BLACK)
-    screen.blit(thanks, (WIDTH//2 - thanks.get_width()//2, y + 80))
+    screen.blit(thanks, (WIDTH//2 - thanks.get_width()//2, box_y + box_h + 30))
 
 # ===== THANK YOU SCREEN FOR DINE-IN =====
 def draw_thank_you_dinein():
@@ -355,25 +365,33 @@ def draw_thank_you_dinein():
     title = font_large.render("Cafe Name", True, WHITE)
     screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
 
-    order_title = font_medium.render("Order", True, BLACK)
-    screen.blit(order_title, (WIDTH//2 - order_title.get_width()//2, 90))
+    # Receipt box
+    box_w = 600
+    box_h = 400
+    box_x = WIDTH//2 - box_w//2
+    box_y = 120
 
+    pygame.draw.rect(screen, WHITE, (box_x, box_y, box_w, box_h))
+    pygame.draw.rect(screen, BLACK, (box_x, box_y, box_w, box_h), 3)
+
+    # Table number
     table_label = font_medium.render(f"Table no.: {assigned_table}", True, BLACK)
-    screen.blit(table_label, (WIDTH//2 - table_label.get_width()//2, 140))
+    screen.blit(table_label, (box_x + 20, box_y + 20))
 
-    y = 200
+    # Order list
+    y = box_y + 80
     for item, qty in current_order.items():
         if qty > 0:
-            price = None
             for cat in MENU:
                 for sub in MENU[cat]:
                     if item in MENU[cat][sub]:
                         price = MENU[cat][sub][item]
 
             line = font_small.render(f"{qty} {item}   ${price * qty:.2f}", True, BLACK)
-            screen.blit(line, (WIDTH//2 - line.get_width()//2, y))
+            screen.blit(line, (box_x + 20, y))
             y += 35
 
+    # Total
     total_cost = sum(
         MENU[cat][sub][item] * qty
         for cat in MENU
@@ -382,10 +400,11 @@ def draw_thank_you_dinein():
         if item in MENU[cat][sub]
     )
     total_label = font_medium.render(f"Total cost: ${total_cost:.2f}", True, BLACK)
-    screen.blit(total_label, (WIDTH//2 - total_label.get_width()//2, y + 20))
+    screen.blit(total_label, (box_x + 20, y + 20))
 
+    # Thank you message
     thanks = font_medium.render("Thank you for ordering at our Cafe!", True, BLACK)
-    screen.blit(thanks, (WIDTH//2 - thanks.get_width()//2, y + 80))
+    screen.blit(thanks, (WIDTH//2 - thanks.get_width()//2, box_y + box_h + 30))
 
 # ===== UPDATED ORDER TYPE SCREEN =====
 def draw_order_type():
@@ -869,18 +888,16 @@ while running:
         draw_release_table()
 
     elif current_screen == "thank_you_takeaway":
-        draw_thank_you_takeaway()
-        if thank_you_start_time and pygame.time.get_ticks() - thank_you_start_time >= 8000:
-            reset_order_state()
-            current_screen = "main_menu"
-            thank_you_start_time = None
+     draw_thank_you_takeaway()
+    if thank_you_start_time and pygame.time.get_ticks() - thank_you_start_time >= 8000:
+        reset_order_state()
+        current_screen = "main_menu"
 
     elif current_screen == "thank_you_dinein":
-        draw_thank_you_dinein()
-        if thank_you_start_time and pygame.time.get_ticks() - thank_you_start_time >= 8000:
-            reset_order_state()
-            current_screen = "main_menu"
-            thank_you_start_time = None
+     draw_thank_you_dinein()
+    if thank_you_start_time and pygame.time.get_ticks() - thank_you_start_time >= 8000:
+        reset_order_state()
+        current_screen = "main_menu"
 
     pygame.display.update()
 
