@@ -39,7 +39,7 @@ MENU = {
         }
     },
     "Food": {
-        "Snacks": {
+        "snacks": {
             "Croissant": 2.00,
             "Muffin": 2.50,
             "Scone": 2.25,
