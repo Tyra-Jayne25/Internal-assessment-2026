@@ -940,7 +940,7 @@ while running:
     # ===== SCREEN DRAWING =====
 
     if current_screen == "main_menu":
-        title = font_large.render("Pit Stop", True, BLACK)
+        title = font_large.render("Cafe Ordering System", True, BLACK)
         screen.blit(title, (WIDTH//2 - title.get_width()//2, 150))
         draw_button("Start New Order", 350, 300, 300, 70)
         draw_button("Release Table", 350, 380, 300, 70)
