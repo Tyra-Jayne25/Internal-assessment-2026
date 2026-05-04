@@ -226,7 +226,7 @@ def draw_sidebar():
 
     return bev_btn, food_btn, sub_buttons
 
-# ===== ITEM LIST WITH SCROLLING (CLIPPED BEHIND BARS) =====
+# ===== ITEM LIST WITH SCROLLING =====
 def draw_item_grid():
     global scroll_y
 
@@ -412,7 +412,7 @@ def draw_order_summary():
 
     return back_btn, delete_buttons
 
-# ===== THANK YOU SCREEN FOR TAKEAWAY (LIGHT BACKGROUND PANEL) =====
+# ===== THANK YOU SCREEN FOR TAKEAWAY =====
 def draw_thank_you_takeaway():
     screen.fill(WHITE)
 
@@ -940,7 +940,7 @@ while running:
     # ===== SCREEN DRAWING =====
 
     if current_screen == "main_menu":
-        title = font_large.render("Cafe Ordering System", True, BLACK)
+        title = font_large.render("Pit Stop", True, BLACK)
         screen.blit(title, (WIDTH//2 - title.get_width()//2, 150))
         draw_button("Start New Order", 350, 300, 300, 70)
         draw_button("Release Table", 350, 380, 300, 70)
