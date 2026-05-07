@@ -3,6 +3,7 @@ import os
 pygame.init()
 
 # ===== CONSTANTS =====
+# Values define the screen size, colours, and fonts used throughout the program
 WIDTH, HEIGHT = 1000, 650
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -14,21 +15,23 @@ GREY = (220, 220, 220)
 LIGHT_GREY = (240, 240, 240)
 DARK_GREY = (160, 160, 160)
 
+#Fonts used for different text sizes
 font_large = pygame.font.Font(None, 60)
 font_medium = pygame.font.Font(None, 40)
 font_small = pygame.font.Font(None, 30)
 
-MAX_ITEM_QUANTITY = 5
+MAX_ITEM_QUANTITY = 10
 
 # ===== MENU =====
+# dictionary defining the menu structure, categories, subcategories, items, and prices
 MENU = {
     "Beverages": {
         "Cold Drinks": {
             "Iced Coffee": 3.00,
             "Orange Juice": 2.50,
             "Water": 2.75,
-            "Smoothie": 4.00,  # acts as category popup
-            "Soda": 1.50       # acts as category popup
+            "Smoothie": 4.00,  # Item opens a multi-option popup for smoothie flavours instead of a normal popup
+            "Soda": 1.50       # Same here - opens multi-option popup for soda flavours instead of normal popup
         },
         "Hot Drinks": {
             "Espresso": 2.50,
@@ -57,6 +60,7 @@ MENU = {
 }
 
 # ===== SPECIAL OPTIONS FOR SODA & SMOOTHIE =====
+# dictionaries store the individual drink options and their prices for the multi-option popups when "Soda" or "Smoothie" is selected from the menu
 SODA_OPTIONS = {
     "Coke": 2.50,
     "Fanta": 2.50,
@@ -72,6 +76,7 @@ SMOOTHIE_OPTIONS = {
 }
 
 # ===== GLOBAL VARIABLES =====
+# variables to keep track of the current order, screen, category/subcategory selections, scroll position, popup states, customer name, table availability, and input state
 current_order = {}
 current_screen = "main_menu"
 current_category = None
@@ -82,6 +87,7 @@ popup_item = None
 popup_qty = 1
 
 # multi-option popup state
+# When the user clicks on "Soda" or "Smoothie" in the menu, instead of opening a normal single-item popup, it opens a special multi-option popup that lists all the soda or smoothie flavours with their own +/- buttons to select quantities for each flavour. This variable tracks which type of multi-option popup is currently open (if any) so that the program knows which options and quantities to display and update.
 multi_popup_type = None  # "Soda" or "Smoothie" or None
 soda_quantities = {name: 0 for name in SODA_OPTIONS}
 smoothie_quantities = {name: 0 for name in SMOOTHIE_OPTIONS}
@@ -94,10 +100,12 @@ input_active = False
 thank_you_start_time = None
 
 # ===== GUI SETUP =====
+# initializes the Pygame screen and sets the window caption
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Cafe Ordering System - Version 3.1")
 
 # ===== IMAGE LOADING =====
+# helper function to load images with error handling - if the image file is missing or fails to load, it creates a placeholder surface filled with a fallback color instead of crashing the program
 def load_image(filename, fallback_color, size):
     if os.path.exists(filename):
         try:
@@ -111,6 +119,7 @@ def load_image(filename, fallback_color, size):
     return surf
 
 # ===== LOAD ALL ITEM IMAGES =====
+# loads images for all menu items and special options, mapping them to their names in the ITEM_IMAGES dictionary. If an image file is missing, it will use a grey box as a placeholder.
 iced_coffee_img = load_image("Iced Coffee.png", GREY, (60, 60))
 orange_juice_img = load_image("Orange Juice.png", GREY, (60, 60))
 water_img = load_image("Water.png", GREY, (60, 60))
@@ -139,18 +148,21 @@ takeaway_img = load_image("Takeaway.png", GREY, (150, 150))
 dinein_img = load_image("Dine-In.png", GREY, (150, 150))
 
 # new images for soda options
+# Since "Soda" is now a multi-option item that opens a popup with multiple soda flavours, instead of one generic image each specific item gets their own image
 coke_img = load_image("Coke.png", GREY, (60, 60))
 fanta_img = load_image("Fanta.png", GREY, (60, 60))
 lp_img = load_image("L&P.png", GREY, (60, 60))
 sprite_img = load_image("Sprite.png", GREY, (60, 60))
 
 # new images for smoothie options
+# Similar to soda, since "Smoothie" is now a multi-option item that opens a popup with multiple smoothie flavours, instead of one generic image each specific item gets their own image
 banana_smoothie_img = load_image("Banana Smoothie.png", GREY, (60, 60))
 chocolate_smoothie_img = load_image("Chocolate Smoothie.png", GREY, (60, 60))
 strawberry_smoothie_img = load_image("Strawberry Smoothie.png", GREY, (60, 60))
 mango_smoothie_img = load_image("Mango Smoothie.png", GREY, (60, 60))
 
 # ===== MAP ITEM NAMES TO IMAGES =====
+# A dictionary that maps each menu item name to its corresponding loaded image. This allows the program to easily retrieve and display the correct image for each item when rendering the item grid and popups.
 ITEM_IMAGES = {
     "Iced Coffee": iced_coffee_img,
     "Orange Juice": orange_juice_img,
@@ -184,8 +196,9 @@ ITEM_IMAGES = {
 }
 
 # ===== PRICE LOOKUP (INCLUDES SPECIAL DRINKS) =====
+# A helper function to get the price of an item by searching through the MENU structure first, then checking the SODA_OPTIONS and SMOOTHIE_OPTIONS if it's not found in the main menu. This allows the program to easily calculate prices for all items, including those in the multi-option popups.
 def get_price(item_name):
-    # first search in MENU
+    # first search in MENU structure
     for cat in MENU:
         for sub in MENU[cat]:
             if item_name in MENU[cat][sub]:
