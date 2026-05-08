@@ -60,6 +60,8 @@ MENU = {
 }
 
 # ===== SPECIAL OPTIONS FOR SODA & SMOOTHIE =====
+# dictionaries store the individual drink options and their prices for the multi-option popups when "Soda" or "Smoothie" is selected from the menu
+
 SODA_OPTIONS = {
     "Coke": 2.50,
     "Fanta": 2.50,
@@ -74,10 +76,24 @@ SMOOTHIE_OPTIONS = {
     "Mango Smoothie": 5.20
 }
 
+MUFFIN_OPTIONS = {
+    "Blueberry Muffin": 2.50,
+    "Chocolate Chip Muffin": 2.75,
+    "Bran Muffin": 2.25,
+    "Banana Nut Muffin": 2.80
+}
+
+TEA_OPTIONS = {
+    "English Breakfast": 3.50,
+    "Earl Grey": 3.50,
+    "Green Tea": 3.75,
+    "Chamomile": 3.75
+}
+
 # ===== HOT DRINK CUSTOMISATION (NEW FOR VERSION 3.2) =====
 # These variables store the customisation options for hot drinks.
 # They ONLY affect the popup window and DO NOT change the printed order.
-HOT_DRINKS = {"Espresso", "Americano", "Hot Chocolate", "Flat White", "Tea"}
+HOT_DRINKS = {"Espresso", "Americano", "Hot Chocolate", "Flat White"}
 MILK_OPTIONS = ["Full", "Trim", "Almond", "Soy", "Oat"]
 
 selected_milk = "Full"        # default milk
@@ -98,11 +114,13 @@ popup_item = None
 popup_qty = 1
 
 # multi-option popup state
-multi_popup_type = None  # "Soda" or "Smoothie" or None
+multi_popup_type = None  # "Soda" or "Smoothie" or "Tea" or "Muffin"
 
 # Stores quantities for each drink inside the multi-option popup
 soda_quantities = {name: 0 for name in SODA_OPTIONS}
 smoothie_quantities = {name: 0 for name in SMOOTHIE_OPTIONS}
+muffin_quantities = {name: 0 for name in MUFFIN_OPTIONS}
+tea_quantities = {name: 0 for name in TEA_OPTIONS}
 
 customer_name = ""
 tables_available = [1,2,3,4,5,6,7,8,9,10]
@@ -173,6 +191,18 @@ chocolate_smoothie_img = load_image("Chocolate Smoothie.png", GREY, (60, 60))
 strawberry_smoothie_img = load_image("Strawberry Smoothie.png", GREY, (60, 60))
 mango_smoothie_img = load_image("Mango Smoothie.png", GREY, (60, 60))
 
+# Images for multi-option muffin options
+blueberry_muffin_img = load_image("Blueberry Muffin.png", GREY, (60, 60))
+chocolate_chip_muffin_img = load_image("Chocolate Chip Muffin.png", GREY, (60, 60))
+bran_muffin_img = load_image("Bran Muffin.png", GREY, (60, 60))
+banana_nut_muffin_img = load_image("Banana Nut Muffin.png", GREY, (60, 60))
+
+# Images for multi-option tea options
+english_breakfast_img = load_image("English Breakfast.png", GREY, (60, 60))
+earl_grey_img = load_image("Earl Grey.png", GREY, (60, 60))
+green_tea_img = load_image("Green Tea.png", GREY, (60, 60))
+chamomile_img = load_image("Chamomile.png", GREY, (60, 60))
+
 # ===== MAP ITEM NAMES TO IMAGES =====
 # A dictionary that allows the program to quickly find the correct image for any item name
 ITEM_IMAGES = {
@@ -204,9 +234,16 @@ ITEM_IMAGES = {
     "Banana Smoothie": banana_smoothie_img,
     "Chocolate Smoothie": chocolate_smoothie_img,
     "Strawberry Smoothie": strawberry_smoothie_img,
-    "Mango Smoothie": mango_smoothie_img
+    "Mango Smoothie": mango_smoothie_img,
+    "Blueberry Muffin": blueberry_muffin_img,
+    "Chocolate Chip Muffin": chocolate_chip_muffin_img,
+    "Bran Muffin": bran_muffin_img,
+    "Banana Nut Muffin": banana_nut_muffin_img,
+    "English Breakfast": english_breakfast_img,
+    "Earl Grey": earl_grey_img,
+    "Green Tea": green_tea_img,
+    "Chamomile": chamomile_img
 }
-
 # ===== PRICE LOOKUP (INCLUDES SPECIAL DRINKS) =====
 # Returns the price of any item,
 def get_price(item_name):
@@ -222,6 +259,12 @@ def get_price(item_name):
     # then in smoothie options
     if item_name in SMOOTHIE_OPTIONS:
         return SMOOTHIE_OPTIONS[item_name]
+    # then in muffin options
+    if item_name in MUFFIN_OPTIONS:
+        return MUFFIN_OPTIONS[item_name]
+    # then in tea options
+    if item_name in TEA_OPTIONS:
+        return TEA_OPTIONS[item_name]
     return 0.0
 
 # ===== DRAW BUTTON =====
@@ -435,7 +478,7 @@ def draw_popup():
     )
 
 
-# ===== MULTI-OPTION POPUP (SODA / SMOOTHIE) =====
+# ===== MULTI-OPTION POPUP (SODA / SMOOTHIE / MUFFINS / TEA) =====
 def draw_multi_popup():
     # Dark overlay to block background clicks
     overlay = pygame.Surface((WIDTH, HEIGHT))
@@ -457,6 +500,14 @@ def draw_multi_popup():
         title_text = "Sodas"
         options = SODA_OPTIONS
         quantities = soda_quantities
+    elif multi_popup_type == "Muffins":
+        title_text = "Muffins"
+        options = MUFFIN_OPTIONS
+        quantities = muffin_quantities
+    elif multi_popup_type == "Tea":
+        title_text = "Tea"
+        options = TEA_OPTIONS
+        quantities = tea_quantities
     else:
         title_text = "Smoothies"
         options = SMOOTHIE_OPTIONS
@@ -557,6 +608,7 @@ def draw_order_summary():
 
 
 # ===== THANK YOU SCREEN FOR TAKEAWAY =====
+# This screen is shown after confirming a takeaway order. It displays the customer's name, the items they ordered, the total cost, and a thank you message.
 def draw_thank_you_takeaway():
     screen.fill(WHITE)
     
@@ -594,6 +646,7 @@ def draw_thank_you_takeaway():
 
 
 # ===== THANK YOU SCREEN FOR DINE-IN =====
+# This screen is shown after confirming a dine-in order. It displays the assigned table number, the items ordered, the total cost, and a thank you message.
 def draw_thank_you_dinein():
     screen.fill(WHITE)
 
@@ -630,6 +683,7 @@ def draw_thank_you_dinein():
 
 
 # ===== UPDATED ORDER TYPE SCREEN =====
+# This screen allows the customer to choose between takeaway and dine-in.
 def draw_order_type():
     screen.fill(WHITE)
 
@@ -659,6 +713,7 @@ def draw_order_type():
 
 
 # ===== UPDATED TAKEAWAY SCREEN =====
+# This screen prompts the customer to enter their name for the takeaway order.
 def draw_takeaway_name():
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
@@ -680,6 +735,7 @@ def draw_takeaway_name():
 
 
 # ===== UPDATED DINE-IN SCREEN =====
+# This screen assigns a table number to the customer for dine-in orders and displays it on the screen.
 def draw_dine_in():
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
@@ -704,6 +760,7 @@ def draw_dine_in():
 
 
 # ===== UPDATED REVIEW ORDER SCREEN =====
+# This screen shows the current order with items in two columns, and a delete button next to each item to remove it from the order.
 def draw_complete_order():
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
@@ -751,6 +808,8 @@ def draw_complete_order():
 
 
 # ===== NO TABLES SCREEN =====
+# This screen appears if the user selects "Dine-In" but there are no tables available.
+# It informs the user that there are no tables and provides a "Back" button to return to the order type selection screen.
 def draw_no_tables():
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
@@ -766,6 +825,8 @@ def draw_no_tables():
 
 
 # ===== RELEASE TABLE SCREEN =====
+# It shows all tables, highlighting those that are currently occupied, and allows the user to click on an occupied table to release it.
+# This screen allows the user to release a table that is currently in use. 
 def draw_release_table():
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
