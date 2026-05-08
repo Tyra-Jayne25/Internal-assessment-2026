@@ -60,7 +60,6 @@ MENU = {
 }
 
 # ===== SPECIAL OPTIONS FOR SODA & SMOOTHIE =====
-# dictionaries store the individual drink options and their prices for the multi-option popups when "Soda" or "Smoothie" is selected from the menu
 SODA_OPTIONS = {
     "Coke": 2.50,
     "Fanta": 2.50,
@@ -75,6 +74,18 @@ SMOOTHIE_OPTIONS = {
     "Mango Smoothie": 5.20
 }
 
+# ===== HOT DRINK CUSTOMISATION (NEW FOR VERSION 3.2) =====
+# These variables store the customisation options for hot drinks.
+# They ONLY affect the popup window and DO NOT change the printed order.
+HOT_DRINKS = {"Espresso", "Americano", "Hot Chocolate", "Flat White", "Tea"}
+MILK_OPTIONS = ["Full", "Trim", "Almond", "Soy", "Oat"]
+
+selected_milk = "Full"        # default milk
+sugar_qty = 0                 # sugar amount (0–3)
+marshmallow_qty = 0           # only used for Hot Chocolate
+MAX_SUGAR = 3
+MAX_MARSHMALLOWS = 3
+
 # ===== GLOBAL VARIABLES =====
 # These variables track the current state of the ordering system.
 current_order = {} 
@@ -87,7 +98,6 @@ popup_item = None
 popup_qty = 1
 
 # multi-option popup state
-# Tracks whether the multi-option popup is open ("Soda", "Smoothie", or None)
 multi_popup_type = None  # "Soda" or "Smoothie" or None
 
 # Stores quantities for each drink inside the multi-option popup
@@ -104,7 +114,7 @@ thank_you_start_time = None
 # ===== GUI SETUP =====
 # initializes the Pygame screen and sets the window caption
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Cafe Ordering System - Version 3.1")
+pygame.display.set_caption("Cafe Ordering System - Version 3.2")
 
 # ===== IMAGE LOADING =====
 def load_image(filename, fallback_color, size):
@@ -291,11 +301,13 @@ def draw_item_grid():
     screen.set_clip(None)
     return item_boxes
 
-# ===== POPUP WINDOW (SINGLE ITEM) =====
-# This function draws the popup window for normal items (NOT Soda or Smoothie).
-# It shows the item image, price, quantity buttons, and an "Add to Order" button.
+# ===== POPUP WINDOW (SINGLE ITEM WITH HOT DRINK CUSTOMISATION) =====
+# This function draws the popup window for normal items.
+# For hot drinks, it also shows milk selection, sugar quantity,
+# and marshmallow quantity (Hot Chocolate only).
+# It does NOT change the printed order text.
 def draw_popup():
-    global popup_qty
+    global popup_qty, selected_milk, sugar_qty, marshmallow_qty
 
     # Dark transparent overlay to block background clicks
     overlay = pygame.Surface((WIDTH, HEIGHT))
@@ -303,7 +315,7 @@ def draw_popup():
     overlay.fill(BLACK)
     screen.blit(overlay, (0, 0))
 
-    # Main popup box
+    # Main popup box (same size as before)
     popup = pygame.Rect(250, 120, 500, 400)
     pygame.draw.rect(screen, WHITE, popup)
 
@@ -314,42 +326,117 @@ def draw_popup():
 
     # Item name
     name_label = font_medium.render(popup_item, True, BLACK)
-    screen.blit(name_label, (250 + (500 - name_label.get_width()) // 2, 150))
+    screen.blit(name_label, (popup.x + (popup.width - name_label.get_width()) // 2, 140))
 
     # Item image
-    img_x = 250 + (500 - 200) // 2
+    img_x = popup.x + (popup.width - 200) // 2
     popup_img = load_image(f"{popup_item}.png", GREY, (200, 150))
-    screen.blit(popup_img, (img_x, 200))
+    screen.blit(popup_img, (img_x, 180))
 
     # Item price
     price = get_price(popup_item)
     price_label = font_small.render(f"Price: ${price:.2f}", True, BLACK)
-    screen.blit(price_label, (250 + (500 - price_label.get_width()) // 2, 360))
+    screen.blit(price_label, (popup.x + (popup.width - price_label.get_width()) // 2, 340))
 
-    # Quantity buttons
-    minus_btn = pygame.Rect(380, 390, 40, 40)
-    plus_btn = pygame.Rect(580, 390, 40, 40)
+    # Default return values for non-hot drinks
+    milk_buttons = []
+    sugar_minus = sugar_plus = None
+    marsh_minus = marsh_plus = None
+
+    y_controls_start = 370
+
+    # ===== HOT DRINK CUSTOMISATION =====
+    if popup_item in HOT_DRINKS:
+
+        # --- Milk selection buttons ---
+        milk_label = font_small.render("Milk:", True, BLACK)
+        screen.blit(milk_label, (popup.x + 40, y_controls_start))
+
+        milk_buttons = []
+        btn_x = popup.x + 110
+        btn_y = y_controls_start - 5
+        btn_w = 70
+        btn_h = 30
+        gap = 5
+
+        for option in MILK_OPTIONS:
+            color = BLUE_DARK if option == selected_milk else DARK_GREY
+            rect = pygame.Rect(btn_x, btn_y, btn_w, btn_h)
+            pygame.draw.rect(screen, color, rect)
+
+            txt = font_small.render(option, True, WHITE)
+            screen.blit(txt, (rect.x + (rect.width - txt.get_width()) // 2,
+                              rect.y + (rect.height - txt.get_height()) // 2))
+
+            milk_buttons.append((option, rect))
+            btn_x += btn_w + gap
+
+        # --- Sugar quantity buttons ---
+        sugar_label = font_small.render("Sugar:", True, BLACK)
+        screen.blit(sugar_label, (popup.x + 40, y_controls_start + 40))
+
+        sugar_minus = pygame.Rect(popup.x + 130, y_controls_start + 40, 30, 30)
+        sugar_plus = pygame.Rect(popup.x + 230, y_controls_start + 40, 30, 30)
+
+        pygame.draw.rect(screen, RED, sugar_minus)
+        pygame.draw.rect(screen, GREEN, sugar_plus)
+
+        screen.blit(font_small.render("-", True, WHITE), (sugar_minus.x + 9, sugar_minus.y + 3))
+        screen.blit(font_small.render("+", True, WHITE), (sugar_plus.x + 9, sugar_plus.y + 3))
+
+        sugar_text = font_small.render(str(sugar_qty), True, BLACK)
+        screen.blit(sugar_text, (popup.x + 185 - sugar_text.get_width() // 2, y_controls_start + 45))
+
+        # --- Marshmallows (ONLY for Hot Chocolate) ---
+        if popup_item == "Hot Chocolate":
+            marsh_label = font_small.render("Marshmallows:", True, BLACK)
+            screen.blit(marsh_label, (popup.x + 280, y_controls_start + 40))
+
+            marsh_minus = pygame.Rect(popup.x + 400, y_controls_start + 40, 30, 30)
+            marsh_plus = pygame.Rect(popup.x + 460, y_controls_start + 40, 30, 30)
+
+            pygame.draw.rect(screen, RED, marsh_minus)
+            pygame.draw.rect(screen, GREEN, marsh_plus)
+
+            screen.blit(font_small.render("-", True, WHITE), (marsh_minus.x + 9, marsh_minus.y + 3))
+            screen.blit(font_small.render("+", True, WHITE), (marsh_plus.x + 9, marsh_plus.y + 3))
+
+            marsh_text = font_small.render(str(marshmallow_qty), True, BLACK)
+            screen.blit(marsh_text, (popup.x + 430 - marsh_text.get_width() // 2, y_controls_start + 45))
+
+        # Move quantity row down to make space
+        qty_y = y_controls_start + 80
+
+    else:
+        # Non-hot drinks keep original quantity position
+        qty_y = 390
+
+    # ===== QUANTITY BUTTONS (same as before) =====
+    minus_btn = pygame.Rect(380, qty_y, 40, 40)
+    plus_btn = pygame.Rect(580, qty_y, 40, 40)
+
     pygame.draw.rect(screen, RED, minus_btn)
     pygame.draw.rect(screen, GREEN, plus_btn)
 
-    # Quantity display
     qty_label = font_medium.render(str(popup_qty), True, BLACK)
-    screen.blit(qty_label, (250 + (500 - qty_label.get_width()) // 2, 395))
+    screen.blit(qty_label, (popup.x + (popup.width - qty_label.get_width()) // 2, qty_y + 5))
 
-    # Minus and Plus signs for quantity buttons
-    screen.blit(font_medium.render("-", True, WHITE), (394, 394))
-    screen.blit(font_medium.render("+", True, WHITE), (592, 394))
+    screen.blit(font_medium.render("-", True, WHITE), (minus_btn.x + 14, qty_y + 4))
+    screen.blit(font_medium.render("+", True, WHITE), (plus_btn.x + 12, qty_y + 4))
 
     # Add to order button
     add_btn = draw_button("Add to Order", 350, 450, 300, 50, BLUE_DARK)
 
-    return close_btn, minus_btn, plus_btn, add_btn
+    # Return all interactive elements so the main loop can detect clicks
+    return (
+        close_btn, minus_btn, plus_btn, add_btn,
+        milk_buttons, sugar_minus, sugar_plus,
+        marsh_minus, marsh_plus
+    )
+
 
 # ===== MULTI-OPTION POPUP (SODA / SMOOTHIE) =====
 def draw_multi_popup():
-# This function draws the special popup for Soda and Smoothie.
-# It displays multiple drink options at once, each with its own image, price, and quantity selector.
-
     # Dark overlay to block background clicks
     overlay = pygame.Surface((WIDTH, HEIGHT))
     overlay.set_alpha(150)
@@ -365,7 +452,7 @@ def draw_multi_popup():
     pygame.draw.rect(screen, RED, close_btn)
     screen.blit(font_medium.render("X", True, WHITE), (close_btn.x + 10, close_btn.y + 5))
 
-    # Determine which options to show based on whether it's Soda or Smoothie
+    # Determine which options to show
     if multi_popup_type == "Soda":
         title_text = "Sodas"
         options = SODA_OPTIONS
@@ -375,50 +462,43 @@ def draw_multi_popup():
         options = SMOOTHIE_OPTIONS
         quantities = smoothie_quantities
 
-    # Popup title
+    # Title
     title = font_medium.render(title_text, True, BLACK)
     screen.blit(title, (popup.centerx - title.get_width()//2, popup.top + 20))
 
-    # Draw each drink option in the popup
     item_rows = {}
     start_y = popup.top + 80
     row_height = 90
 
     for i, (name, price) in enumerate(options.items()):
-        # Draw background for the row
         row_y = start_y + i * row_height
         row_rect = pygame.Rect(popup.left + 20, row_y, popup.width - 40, row_height - 10)
         pygame.draw.rect(screen, LIGHT_GREY, row_rect)
-        
-        # Draw the drink image
+
         img = ITEM_IMAGES.get(name, load_image(f"{name}.png", GREY, (60, 60)))
         screen.blit(img, (row_rect.x + 10, row_rect.y + 10))
 
-        # Draw the drink name and price
         name_label = font_small.render(name, True, BLACK)
         screen.blit(name_label, (row_rect.x + 90, row_rect.y + 10))
 
-        # Draw price below the name
         price_label = font_small.render(f"${price:.2f}", True, BLACK)
         screen.blit(price_label, (row_rect.x + 90, row_rect.y + 40))
 
-        # Draw quantity buttons and display
         minus_btn = pygame.Rect(row_rect.right - 150, row_rect.y + 20, 30, 30)
         plus_btn = pygame.Rect(row_rect.right - 50, row_rect.y + 20, 30, 30)
-        qty_val = quantities[name]
-        qty_label = font_small.render(str(qty_val), True, BLACK)
 
-        # Draw the minus and plus buttons, and the quantity in between
         pygame.draw.rect(screen, RED, minus_btn)
         pygame.draw.rect(screen, GREEN, plus_btn)
+
         screen.blit(font_small.render("-", True, WHITE), (minus_btn.x + 9, minus_btn.y + 3))
         screen.blit(font_small.render("+", True, WHITE), (plus_btn.x + 9, plus_btn.y + 3))
+
+        qty_val = quantities[name]
+        qty_label = font_small.render(str(qty_val), True, BLACK)
         screen.blit(qty_label, (row_rect.right - 100 - qty_label.get_width()//2, row_rect.y + 25))
-        
-        # Store the button rects for this item so we can check clicks later
+
         item_rows[name] = (minus_btn, plus_btn)
-    
-    # Add to order button
+
     add_btn = draw_button("Add to Order", popup.centerx - 150, popup.bottom - 70, 300, 50, BLUE_DARK)
 
     return close_btn, add_btn, item_rows
@@ -449,7 +529,6 @@ def draw_order_summary():
 
         x = col1_x if count % 2 == 0 else col2_x
 
-        # Item text
         text_surf = font_small.render(f"{item} x{qty} - ${price * qty:.2f}", True, BLACK)
         screen.blit(text_surf, (x, y))
         
@@ -462,33 +541,29 @@ def draw_order_summary():
 
         delete_buttons.append((item, del_btn))
         
-        # Move to next column after every 2 items
         if count % 2 == 1:
             y += 40
 
         count += 1
     
-    # Calculate and display total cost at the bottom
+    # Total cost
     total_cost = sum(get_price(item) * qty for item, qty in current_order.items() if qty > 0)
     screen.blit(font_medium.render(f"Total: ${total_cost:.2f}", True, BLACK), (60, 570))
 
-    # Continue and Back buttons
+    # Back button
     back_btn = draw_button("Back", 800, 560, 150, 50)
 
     return back_btn, delete_buttons
 
+
 # ===== THANK YOU SCREEN FOR TAKEAWAY =====
-# This screen appears after a takeaway order is completed.
-# It shows the customer's name, their order, and the total cost.
 def draw_thank_you_takeaway():
     screen.fill(WHITE)
     
-    # Draw header
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
     title = font_large.render("Cafe Name", True, WHITE)
     screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
 
-    # Draw the light grey panel for the order summary
     panel_w = 600
     panel_h = 400
     panel_x = WIDTH//2 - panel_w//2
@@ -496,14 +571,12 @@ def draw_thank_you_takeaway():
 
     pygame.draw.rect(screen, LIGHT_GREY, (panel_x, panel_y, panel_w, panel_h))
 
-    # Display the customer's name at the top of the panel
     name_label = font_medium.render(f"Name: {customer_name}", True, BLACK)
     screen.blit(name_label, (panel_x + 20, panel_y + 20))
 
-    # Draw a line to separate the name from the order details
-    pygame.draw.line(screen, BLACK, (panel_x + 20, panel_y + 60), (panel_x + panel_w - 20, panel_y + 60), 2)
+    pygame.draw.line(screen, BLACK, (panel_x + 20, panel_y + 60),
+                     (panel_x + panel_w - 20, panel_y + 60), 2)
 
-    # List each item in the order with its quantity and total price, spaced out vertically
     y = panel_y + 80
     for item, qty in current_order.items():
         if qty > 0:
@@ -512,43 +585,34 @@ def draw_thank_you_takeaway():
             screen.blit(line, (panel_x + 20, y))
             y += 35
     
-    # Calculate and display the total cost at the bottom of the panel
     total_cost = sum(get_price(item) * qty for item, qty in current_order.items() if qty > 0)
     total_label = font_medium.render(f"Total cost: ${total_cost:.2f}", True, BLACK)
     screen.blit(total_label, (panel_x + 20, y + 20))
 
-    # Display a thank you message below the panel
     thanks = font_medium.render("Thank you for ordering at our Cafe!", True, BLACK)
     screen.blit(thanks, (WIDTH//2 - thanks.get_width()//2, panel_y + panel_h + 30))
 
-# ===== THANK YOU SCREEN FOR DINE-IN (LIGHT BACKGROUND PANEL) =====
 
+# ===== THANK YOU SCREEN FOR DINE-IN =====
 def draw_thank_you_dinein():
-    # This screen appears after a dine-in order is completed.
-    # It shows the assigned table number, the order, and the total cost.
-
     screen.fill(WHITE)
 
-    # Draw header
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
     title = font_large.render("Cafe Name", True, WHITE)
     screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
 
-    # Draw the light grey panel for the order summary
     panel_w = 600
     panel_h = 400
     panel_x = WIDTH//2 - panel_w//2
     panel_y = 120
     pygame.draw.rect(screen, LIGHT_GREY, (panel_x, panel_y, panel_w, panel_h))
 
-    # Display the assigned table number at the top of the panel
     table_label = font_medium.render(f"Table no.: {assigned_table}", True, BLACK)
     screen.blit(table_label, (panel_x + 20, panel_y + 20))
 
-    # Draw a line to separate the table number from the order details
-    pygame.draw.line(screen, BLACK, (panel_x + 20, panel_y + 60), (panel_x + panel_w - 20, panel_y + 60), 2)
+    pygame.draw.line(screen, BLACK, (panel_x + 20, panel_y + 60),
+                     (panel_x + panel_w - 20, panel_y + 60), 2)
 
-    # List each item in the order with its quantity and total price, spaced out vertically
     y = panel_y + 80
     for item, qty in current_order.items():
         if qty > 0:
@@ -556,42 +620,35 @@ def draw_thank_you_dinein():
             line = font_small.render(f"{qty} {item}   ${price * qty:.2f}", True, BLACK)
             screen.blit(line, (panel_x + 20, y))
             y += 35
-    # Calculate and display the total cost at the bottom of the panel
+
     total_cost = sum(get_price(item) * qty for item, qty in current_order.items() if qty > 0)
     total_label = font_medium.render(f"Total cost: ${total_cost:.2f}", True, BLACK)
     screen.blit(total_label, (panel_x + 20, y + 20))
-    
-    # Display a thank you message below the panel
+
     thanks = font_medium.render("Thank you for ordering at our Cafe!", True, BLACK)
     screen.blit(thanks, (WIDTH//2 - thanks.get_width()//2, panel_y + panel_h + 30))
 
+
 # ===== UPDATED ORDER TYPE SCREEN =====
 def draw_order_type():
-    # This screen lets the user choose between Takeaway or Dine‑In.
-    # It appears after the user clicks "Complete Order".
     screen.fill(WHITE)
 
-    # Draw header
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
     title = font_medium.render("ORDER TYPE", True, WHITE)
     screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
 
-    # Draw the Takeaway option box
     take_rect = pygame.Rect(200, 200, 250, 250)
     pygame.draw.rect(screen, LIGHT_GREY, take_rect)
     screen.blit(takeaway_img, (take_rect.x + 50, take_rect.y + 20))
 
-    # Label for Takeaway option
     take_label = font_medium.render("Takeaway", True, BLACK)
     screen.blit(take_label, (take_rect.centerx - take_label.get_width()//2,
                              take_rect.y + 190))
 
-    # Draw the Dine-In option box
     dine_rect = pygame.Rect(550, 200, 250, 250)
     pygame.draw.rect(screen, LIGHT_GREY, dine_rect)
     screen.blit(dinein_img, (dine_rect.x + 50, dine_rect.y + 20))
 
-    # Label for Dine-In option
     dine_label = font_medium.render("Dine-In", True, BLACK)
     screen.blit(dine_label, (dine_rect.centerx - dine_label.get_width()//2,
                              dine_rect.y + 190))
@@ -600,83 +657,69 @@ def draw_order_type():
 
     return dine_rect, take_rect, back_btn
 
+
 # ===== UPDATED TAKEAWAY SCREEN =====
-# This screen appears after the user selects "Takeaway" as their order type.
 def draw_takeaway_name():
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
-    
-    # Draw header
+
     title = font_medium.render("TAKEAWAY", True, WHITE)
     screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
 
-    # Prompt for the user to enter their name, with a text box and an "Enter" button
     prompt = font_medium.render("Enter your name:", True, BLACK)
     screen.blit(prompt, (WIDTH//2 - prompt.get_width()//2, 200))
 
-    # Draw the text box for name input
     pygame.draw.rect(screen, LIGHT_GREY, (WIDTH//2 - 200, 260, 400, 60))
     name_text = font_medium.render(customer_name, True, BLACK)
     screen.blit(name_text, (WIDTH//2 - 190, 270))
 
-    # Draw the Enter and Back buttons
     enter_btn = draw_button("Enter", WIDTH//2 - 150, 350, 300, 70)
     back_btn = draw_button("Back", WIDTH//2 - 150, 450, 300, 70)
 
     return enter_btn, back_btn
 
+
 # ===== UPDATED DINE-IN SCREEN =====
 def draw_dine_in():
-# This screen appears after the user selects "Dine-In" as their order type.
-# It shows the assigned table number and an "Enter" button to proceed to the order summary.
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
-    
-    # Draw header
+
     title = font_medium.render("DINE-IN", True, WHITE)
     screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
 
     if len(tables_available) == 0:
         return None, None
 
-    # Assign the first available table to the customer
     table_num = tables_available[0]
 
-    # Display the assigned table number in the center of the screen, with an "Enter" button below it
     label = font_medium.render("Your table number is:", True, BLACK)
     screen.blit(label, (WIDTH//2 - label.get_width()//2, 200))
 
-    # Draw a light grey box around the table number to make it stand out
     pygame.draw.rect(screen, LIGHT_GREY, (WIDTH//2 - 75, 260, 150, 100))
     num = font_large.render(str(table_num), True, BLACK)
     screen.blit(num, (WIDTH//2 - num.get_width()//2, 280))
-    
-    # Draw the Enter button to proceed to the order summary
+
     enter_btn = draw_button("Enter", WIDTH//2 - 150, 450, 300, 70)
     return enter_btn, table_num
 
-# ===== UPDATED REVIEW ORDER SCREEN (RESTORED SPACING) =====
+
+# ===== UPDATED REVIEW ORDER SCREEN =====
 def draw_complete_order():
-# This screen shows a summary of the current order before finalizing.
-# Items are displayed in two columns, with delete buttons next to each item, and the total cost at the bottom.
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
 
-    # Draw header
     title = font_medium.render("REVIEW ORDER", True, WHITE)
     screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
 
     items = [(item, qty) for item, qty in current_order.items() if qty > 0]
 
-    # Display items in two columns with restored spacing, and add delete buttons next to each item
     col1_x = 80
     col2_x = 500
     y = 140
     count = 0
 
     delete_buttons = []
-    
-    # Loop through each item in the order and display it with its quantity and total price, along with a delete button.
+
     for item, qty in items:
         price = get_price(item)
 
@@ -684,7 +727,6 @@ def draw_complete_order():
         text_surf = font_small.render(f"{item} x{qty} - ${price * qty:.2f}", True, BLACK)
         screen.blit(text_surf, (x, y))
 
-        # Draw the delete button next to each item
         del_btn = pygame.Rect(x + 260, y - 2, 90, 32)
         pygame.draw.rect(screen, RED, del_btn)
         del_label = font_small.render("Delete", True, WHITE)
@@ -698,60 +740,49 @@ def draw_complete_order():
 
         count += 1
 
-    # Calculate and display the total cost at the bottom of the screen
     total_cost = sum(get_price(item) * qty for item, qty in current_order.items() if qty > 0)
     total_label = font_medium.render(f"Total: ${total_cost:.2f}", True, BLACK)
     screen.blit(total_label, (60, 570))
-    
-    # Draw the Continue button to finalize the order, and a Back button to return to the ordering screen
+
     continue_btn = draw_button("Continue", WIDTH//2 - 100, 560, 200, 50)
     back_btn = draw_button("Back", WIDTH - 200, 560, 150, 50)
 
     return continue_btn, back_btn, delete_buttons
 
+
 # ===== NO TABLES SCREEN =====
 def draw_no_tables():
-# This screen appears if the user selects "Dine-In" but there are no tables available.
-# It informs the user that there are no tables and provides a "Back" button to return to the order type selection screen.
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
 
-    # Draw header
     title = font_medium.render("NO TABLES AVAILABLE", True, WHITE)
     screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
 
-    # Display a message in the center of the screen informing the user that there are no tables available, and to wait for the next available table.
     msg = font_medium.render("Sorry, no tables available. Please wait for the next available table.", True, BLACK)
     screen.blit(msg, (WIDTH//2 - msg.get_width()//2, 200))
 
-    # Draw a "Back" button to return to the order type selection screen
     back_btn = draw_button("Back", WIDTH//2 - 150, 450, 300, 70)
     return back_btn
 
+
 # ===== RELEASE TABLE SCREEN =====
 def draw_release_table():
-# This screen allows the user to release a table that is currently in use.
-# It shows all tables, highlighting those that are currently occupied, and allows the user to click on an occupied table to release it.
     screen.fill(WHITE)
     pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
 
-    # Draw header
     title = font_medium.render("RELEASE TABLE", True, WHITE)
     screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
 
-    # Draw all tables as rectangles, highlighting those that are currently in use (not in tables_available).
     tables_rects = []
     all_tables = list(range(1, 11))
     used_tables = [t for t in all_tables if t not in tables_available]
-    
-    # Calculate positions for the table rectangles in a grid layout (2 rows of 5 tables)
+
     start_x = 200
     start_y = 150
     w, h = 100, 80
     gap_x = 40
     gap_y = 40
 
-    # Loop through all tables and draw them in a grid, coloring them red if they are in use and grey if they are available. Store the rects for click detection.
     for i, t in enumerate(all_tables):
         row = i // 5
         col = i % 5
@@ -761,30 +792,184 @@ def draw_release_table():
         color = RED if t in used_tables else GREY
         rect = pygame.Rect(x, y, w, h)
         pygame.draw.rect(screen, color, rect)
-        
-        # Draw the table number in the center of the rectangle, using white text for occupied tables and black text for available tables to ensure readability.
+
         label = font_medium.render(str(t), True, WHITE if t in used_tables else BLACK)
         screen.blit(label, (rect.centerx - label.get_width()//2,
                             rect.centery - label.get_height()//2))
 
         tables_rects.append((t, rect, t in used_tables))
-    
-    # Display instructions below the tables, explaining that red tables are currently in use and can be clicked to release them.
+
     info = font_small.render("Red = In Use (click to release)", True, BLACK)
     screen.blit(info, (WIDTH//2 - info.get_width()//2, 380))
 
-    # Draw a "Back" button to return to the main menu
+    back_btn = draw_button("Back", WIDTH//2 - 150, 500, 300, 60)
+
+    return tables_rects, back_btn
+
+# ===== UPDATED TAKEAWAY SCREEN =====
+# This screen appears after the user selects "Takeaway" as their order type.
+def draw_takeaway_name():
+    screen.fill(WHITE)
+    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
+    
+    # Draw header
+    title = font_medium.render("TAKEAWAY", True, WHITE)
+    screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
+
+    # Prompt for the user to enter their name
+    prompt = font_medium.render("Enter your name:", True, BLACK)
+    screen.blit(prompt, (WIDTH//2 - prompt.get_width()//2, 200))
+
+    # Text box
+    pygame.draw.rect(screen, LIGHT_GREY, (WIDTH//2 - 200, 260, 400, 60))
+    name_text = font_medium.render(customer_name, True, BLACK)
+    screen.blit(name_text, (WIDTH//2 - 190, 270))
+
+    # Buttons
+    enter_btn = draw_button("Enter", WIDTH//2 - 150, 350, 300, 70)
+    back_btn = draw_button("Back", WIDTH//2 - 150, 450, 300, 70)
+
+    return enter_btn, back_btn
+
+
+# ===== UPDATED DINE-IN SCREEN =====
+def draw_dine_in():
+    # This screen appears after the user selects "Dine-In".
+    screen.fill(WHITE)
+    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
+
+    title = font_medium.render("DINE-IN", True, WHITE)
+    screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
+
+    if len(tables_available) == 0:
+        return None, None
+
+    # Assign first available table
+    table_num = tables_available[0]
+
+    label = font_medium.render("Your table number is:", True, BLACK)
+    screen.blit(label, (WIDTH//2 - label.get_width()//2, 200))
+
+    pygame.draw.rect(screen, LIGHT_GREY, (WIDTH//2 - 75, 260, 150, 100))
+    num = font_large.render(str(table_num), True, BLACK)
+    screen.blit(num, (WIDTH//2 - num.get_width()//2, 280))
+
+    enter_btn = draw_button("Enter", WIDTH//2 - 150, 450, 300, 70)
+    return enter_btn, table_num
+
+
+# ===== UPDATED REVIEW ORDER SCREEN (RESTORED SPACING) =====
+def draw_complete_order():
+    screen.fill(WHITE)
+    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
+
+    title = font_medium.render("REVIEW ORDER", True, WHITE)
+    screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
+
+    items = [(item, qty) for item, qty in current_order.items() if qty > 0]
+
+    col1_x = 80
+    col2_x = 500
+    y = 140
+    count = 0
+    delete_buttons = []
+
+    for item, qty in items:
+        price = get_price(item)
+
+        x = col1_x if count % 2 == 0 else col2_x
+        text_surf = font_small.render(f"{item} x{qty} - ${price * qty:.2f}", True, BLACK)
+        screen.blit(text_surf, (x, y))
+
+        del_btn = pygame.Rect(x + 260, y - 2, 90, 32)
+        pygame.draw.rect(screen, RED, del_btn)
+        del_label = font_small.render("Delete", True, WHITE)
+        screen.blit(del_label, (del_btn.x + (del_btn.width - del_label.get_width()) // 2,
+                                del_btn.y + (del_btn.height - del_label.get_height()) // 2))
+
+        delete_buttons.append((item, del_btn))
+
+        if count % 2 == 1:
+            y += 40
+        count += 1
+
+    total_cost = sum(get_price(item) * qty for item, qty in current_order.items() if qty > 0)
+    total_label = font_medium.render(f"Total: ${total_cost:.2f}", True, BLACK)
+    screen.blit(total_label, (60, 570))
+
+    continue_btn = draw_button("Continue", WIDTH//2 - 100, 560, 200, 50)
+    back_btn = draw_button("Back", WIDTH - 200, 560, 150, 50)
+
+    return continue_btn, back_btn, delete_buttons
+
+
+# ===== NO TABLES SCREEN =====
+def draw_no_tables():
+    screen.fill(WHITE)
+    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
+
+    title = font_medium.render("NO TABLES AVAILABLE", True, WHITE)
+    screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
+
+    msg = font_medium.render(
+        "Sorry, no tables available. Please wait for the next available table.",
+        True, BLACK
+    )
+    screen.blit(msg, (WIDTH//2 - msg.get_width()//2, 200))
+
+    back_btn = draw_button("Back", WIDTH//2 - 150, 450, 300, 70)
+    return back_btn
+
+
+# ===== RELEASE TABLE SCREEN =====
+def draw_release_table():
+    screen.fill(WHITE)
+    pygame.draw.rect(screen, BLUE, (0, 0, WIDTH, 60))
+
+    title = font_medium.render("RELEASE TABLE", True, WHITE)
+    screen.blit(title, (WIDTH//2 - title.get_width()//2, 10))
+
+    tables_rects = []
+    all_tables = list(range(1, 11))
+    used_tables = [t for t in all_tables if t not in tables_available]
+
+    start_x = 200
+    start_y = 150
+    w, h = 100, 80
+    gap_x = 40
+    gap_y = 40
+
+    for i, t in enumerate(all_tables):
+        row = i // 5
+        col = i % 5
+        x = start_x + col * (w + gap_x)
+        y = start_y + row * (h + gap_y)
+
+        color = RED if t in used_tables else GREY
+        rect = pygame.Rect(x, y, w, h)
+        pygame.draw.rect(screen, color, rect)
+
+        label = font_medium.render(str(t), True, WHITE if t in used_tables else BLACK)
+        screen.blit(label, (rect.centerx - label.get_width()//2,
+                            rect.centery - label.get_height()//2))
+
+        tables_rects.append((t, rect, t in used_tables))
+
+    info = font_small.render("Red = In Use (click to release)", True, BLACK)
+    screen.blit(info, (WIDTH//2 - info.get_width()//2, 380))
+
     back_btn = draw_button("Back", WIDTH//2 - 150, 500, 300, 60)
 
     return tables_rects, back_btn
 
 # ===== RESET ORDER STATE =====
 def reset_order_state():
-# This function resets ALL variables so a new order can start fresh.
+    # This function resets ALL variables so a new order can start fresh.
     global current_order, current_category, current_subcategory
     global scroll_y, popup_item, popup_qty
     global customer_name, assigned_table, input_active, thank_you_start_time
     global multi_popup_type, soda_quantities, smoothie_quantities
+    global selected_milk, sugar_qty, marshmallow_qty
 
     current_order = {}
     current_category = None
@@ -801,6 +986,12 @@ def reset_order_state():
     multi_popup_type = None
     soda_quantities = {name: 0 for name in SODA_OPTIONS}
     smoothie_quantities = {name: 0 for name in SMOOTHIE_OPTIONS}
+
+    # Reset hot drink customisation
+    selected_milk = "Full"
+    sugar_qty = 0
+    marshmallow_qty = 0
+
 
 # ===== MAIN LOOP =====
 running = True
@@ -875,24 +1066,19 @@ while running:
                         current_subcategory = sub
                         scroll_y = 0
 
-                # handle multi-option popup first
+                # ===== MULTI-OPTION POPUP =====
                 if multi_popup_type is not None:
                     close_btn, add_btn, item_rows = draw_multi_popup()
                     
-                    # close button for multi-option popup
                     if close_btn.collidepoint(event.pos):
                         multi_popup_type = None
                         continue
 
-                    # per-item +/- buttons
                     if multi_popup_type == "Soda":
                         quantities = soda_quantities
-                        options = SODA_OPTIONS
                     else:
                         quantities = smoothie_quantities
-                        options = SMOOTHIE_OPTIONS
 
-                    # check if any of the +/- buttons were clicked for each item in the multi-option popup
                     clicked_any = False
                     for name, (minus_btn, plus_btn) in item_rows.items():
                         if minus_btn.collidepoint(event.pos):
@@ -907,7 +1093,6 @@ while running:
                     if clicked_any:
                         continue
                     
-                    # add to order button for multi-option popup
                     if add_btn.collidepoint(event.pos):
                         for name, qty in quantities.items():
                             if qty > 0:
@@ -916,49 +1101,74 @@ while running:
                                     current_order.get(name, 0) + qty
                                 )
                         multi_popup_type = None
-                        # reset quantities after adding
                         soda_quantities = {n: 0 for n in SODA_OPTIONS}
                         smoothie_quantities = {n: 0 for n in SMOOTHIE_OPTIONS}
                         continue
 
-                    # block background clicks
                     continue
 
-                # handle single-item popup
+                # ===== SINGLE-ITEM POPUP =====
                 if popup_item is not None:
-                    close_btn, minus_btn, plus_btn, add_btn = draw_popup()
+                    (close_btn, minus_btn, plus_btn, add_btn,
+                     milk_buttons, sugar_minus, sugar_plus,
+                     marsh_minus, marsh_plus) = draw_popup()
 
-                    # check if any of the popup buttons were clicked
                     if close_btn.collidepoint(event.pos):
                         popup_item = None
                         continue
 
-                    # check minus, plus, and add buttons for single-item popup
                     if minus_btn.collidepoint(event.pos):
                         popup_qty = max(1, popup_qty - 1)
                         continue
 
-                    # check plus button for single-item popup
                     if plus_btn.collidepoint(event.pos):
                         popup_qty = min(MAX_ITEM_QUANTITY, popup_qty + 1)
                         continue
 
-                    # check add to order button for single-item popup
+                    # Hot drink customisation
+                    if popup_item in HOT_DRINKS:
+
+                        for option, rect in milk_buttons:
+                            if rect.collidepoint(event.pos):
+                                selected_milk = option
+                                break
+
+                        if sugar_minus and sugar_minus.collidepoint(event.pos):
+                            sugar_qty = max(0, sugar_qty - 1)
+                            continue
+
+                        if sugar_plus and sugar_plus.collidepoint(event.pos):
+                            sugar_qty = min(MAX_SUGAR, sugar_qty + 1)
+                            continue
+
+                        if popup_item == "Hot Chocolate":
+                            if marsh_minus and marsh_minus.collidepoint(event.pos):
+                                marshmallow_qty = max(0, marshmallow_qty - 1)
+                                continue
+
+                            if marsh_plus and marsh_plus.collidepoint(event.pos):
+                                marshmallow_qty = min(MAX_MARSHMALLOWS, marshmallow_qty + 1)
+                                continue
+
                     if add_btn.collidepoint(event.pos):
                         current_order[popup_item] = min(
                             MAX_ITEM_QUANTITY,
                             current_order.get(popup_item, 0) + popup_qty
                         )
+
+                        selected_milk = "Full"
+                        sugar_qty = 0
+                        marshmallow_qty = 0
+
                         popup_item = None
                         continue
 
                     continue
 
-                # block clicks on top and bottom bars from hitting items
+                # ===== ITEM CLICK =====
                 y_click = event.pos[1]
                 in_content_area = (y_click >= 160) and (y_click <= HEIGHT - 120)
 
-                # If no popups are open and the click is within the content area, check if an item was clicked to open its popup.
                 if popup_item is None and multi_popup_type is None and current_subcategory and in_content_area:
                     for item, rect in item_boxes:
                         if rect.collidepoint(event.pos):
@@ -973,21 +1183,18 @@ while running:
                                 popup_qty = 1
                             break
 
-                # Only open a popup if the click was within the content area (not on the top or bottom bars)
+                # Bottom buttons
                 see_btn = pygame.Rect(260, HEIGHT - 72, 200, 55)
                 cancel_btn = pygame.Rect(480, HEIGHT - 72, 200, 55)
                 complete_btn = pygame.Rect(700, HEIGHT - 72, 230, 55)
 
-                # Check if the "See Order", "Cancel Order", or "Complete Order" buttons were clicked, and navigate to the appropriate screen or reset state.
                 if see_btn.collidepoint(event.pos):
                     current_screen = "order_summary"
 
-                # Check if the "Cancel Order" button was clicked, and if so, reset the order state and return to the main menu.
                 if cancel_btn.collidepoint(event.pos):
                     reset_order_state()
                     current_screen = "main_menu"
                 
-                # Check if the "Complete Order" button was clicked, and if so, navigate to the complete review screen.
                 if complete_btn.collidepoint(event.pos):
                     current_screen = "complete_review"
 
@@ -995,14 +1202,11 @@ while running:
             elif current_screen == "order_summary":
                 back_btn, delete_buttons = draw_order_summary()
 
-                # Check if any delete buttons were clicked, and if so, remove that item from the current order.
                 for item, btn in delete_buttons:
                     if btn.collidepoint(event.pos):
-                        if item in current_order:
-                            del current_order[item]
+                        del current_order[item]
                         break
 
-                # Check if the Back button was clicked, and if so, return to the ordering screen.
                 if back_btn.collidepoint(event.pos):
                     current_screen = "ordering"
 
@@ -1010,18 +1214,14 @@ while running:
             elif current_screen == "complete_review":
                 continue_btn, back_btn, delete_buttons = draw_complete_order()
 
-                # Check if any delete buttons were clicked, and if so, remove that item from the current order.
                 for item, btn in delete_buttons:
                     if btn.collidepoint(event.pos):
-                        if item in current_order:
-                            del current_order[item]
+                        del current_order[item]
                         break
                 
-                # Check if the Continue button was clicked, and if so, navigate to the order type selection screen.
                 if continue_btn.collidepoint(event.pos):
                     current_screen = "order_type" 
                 
-                # Check if the Back button was clicked, and if so, return to the ordering screen.
                 if back_btn.collidepoint(event.pos):
                     current_screen = "ordering"
 
@@ -1035,12 +1235,10 @@ while running:
                     else:
                         current_screen = "dine_in"
 
-                # Check if the Takeaway option was clicked, and if so, navigate to the takeaway name input screen.
                 if take_rect.collidepoint(event.pos):
                     current_screen = "takeaway_name"
                     input_active = False
                 
-                # Check if the Back button was clicked, and if so, return to the complete review screen.
                 if back_btn.collidepoint(event.pos):
                     current_screen = "complete_review"
 
@@ -1048,18 +1246,15 @@ while running:
             elif current_screen == "takeaway_name":
                 enter_btn, back_btn = draw_takeaway_name()
 
-                # Check if the text box was clicked, and if so, activate it for typing.
                 name_box = pygame.Rect(WIDTH//2 - 200, 260, 400, 60)
                 if name_box.collidepoint(event.pos):
                     input_active = True
 
-                # Check if the Enter button was clicked, and if so, navigate to the thank you screen for takeaway orders.
                 if enter_btn.collidepoint(event.pos):
                     current_screen = "thank_you_takeaway"
                     thank_you_start_time = pygame.time.get_ticks()
                     input_active = False
 
-                # Check if the Back button was clicked, and if so, return to the order type selection screen.
                 if back_btn.collidepoint(event.pos):
                     current_screen = "order_type"
                     input_active = False
@@ -1068,7 +1263,6 @@ while running:
             elif current_screen == "dine_in":
                 enter_btn, table_num = draw_dine_in()
 
-                # Check if the Enter button was clicked, and if so, assign the table to the customer (removing it from the available tables list) and navigate to the thank you screen for dine-in orders.
                 if enter_btn and enter_btn.collidepoint(event.pos):
                     if table_num in tables_available:
                         tables_available.remove(table_num)
@@ -1097,7 +1291,6 @@ while running:
                     current_screen = "main_menu"
 
     # ===== SCREEN DRAWING =====
-# Based on the current screen state, draw the appropriate UI elements and content for that screen.
     if current_screen == "main_menu":
         title = font_large.render("Cafe Ordering System", True, BLACK)
         screen.blit(title, (WIDTH//2 - title.get_width()//2, 150))
@@ -1112,7 +1305,6 @@ while running:
 
         pygame.draw.rect(screen, BLUE, (200, 0, WIDTH - 200, 140))
 
-        # Draw header
         x = 230
         y = 80
         sub_btns = []
@@ -1124,17 +1316,14 @@ while running:
 
         pygame.draw.rect(screen, BLUE, (200, HEIGHT - 90, WIDTH - 200, 90))
 
-        # Calculate and display the total cost of the current order at the bottom of the screen, above the buttons.
         total_cost = sum(get_price(item) * qty for item, qty in current_order.items() if qty > 0)
         cost_label = font_medium.render(f"Cost: ${total_cost:.2f}", True, BLACK)
         screen.blit(cost_label, (20, HEIGHT - 60))
 
-        # Draw the "See Order", "Cancel Order", and "Complete Order" buttons at the bottom of the screen.
         draw_button("See Order", 260, HEIGHT - 72, 200, 55, BLUE_DARK)
         draw_button("Cancel Order", 480, HEIGHT - 72, 200, 55, BLUE_DARK)
         draw_button("Complete Order", 700, HEIGHT - 72, 230, 55, BLUE_DARK)
 
-        # If a popup is open, draw it on top of the ordering screen.
         if multi_popup_type:
             draw_multi_popup()
         elif popup_item:
