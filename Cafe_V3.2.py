@@ -80,7 +80,7 @@ MUFFIN_OPTIONS = {
     "Blueberry Muffin": 2.50,
     "Chocolate Chip Muffin": 2.75,
     "Bran Muffin": 2.25,
-    "Banana Nut Muffin": 2.80
+    "Banana Muffin": 2.80
 }
 
 TEA_OPTIONS = {
@@ -195,7 +195,7 @@ mango_smoothie_img = load_image("Mango Smoothie.png", GREY, (60, 60))
 blueberry_muffin_img = load_image("Blueberry Muffin.png", GREY, (60, 60))
 chocolate_chip_muffin_img = load_image("Chocolate Chip Muffin.png", GREY, (60, 60))
 bran_muffin_img = load_image("Bran Muffin.png", GREY, (60, 60))
-banana_nut_muffin_img = load_image("Banana Nut Muffin.png", GREY, (60, 60))
+banana_nut_muffin_img = load_image("Banana Muffin.png", GREY, (60, 60))
 
 # Images for multi-option tea options
 english_breakfast_img = load_image("English Breakfast.png", GREY, (60, 60))
@@ -500,18 +500,21 @@ def draw_multi_popup():
         title_text = "Sodas"
         options = SODA_OPTIONS
         quantities = soda_quantities
-    elif multi_popup_type == "Muffins":
-        title_text = "Muffins"
-        options = MUFFIN_OPTIONS
-        quantities = muffin_quantities
-    elif multi_popup_type == "Tea":
-        title_text = "Tea"
-        options = TEA_OPTIONS
-        quantities = tea_quantities
-    else:
+        
+    elif multi_popup_type == "Smoothie":
         title_text = "Smoothies"
         options = SMOOTHIE_OPTIONS
         quantities = smoothie_quantities
+
+    elif multi_popup_type == "Tea":
+        title_text = "Tea Options"
+        options = TEA_OPTIONS
+        quantities = tea_quantities
+        
+    elif multi_popup_type == "Muffin":
+        title_text = "Muffin Flavours"
+        options = MUFFIN_OPTIONS
+        quantities = muffin_quantities
 
     # Title
     title = font_medium.render(title_text, True, BLACK)
@@ -605,7 +608,6 @@ def draw_order_summary():
     back_btn = draw_button("Back", 800, 560, 150, 50)
 
     return back_btn, delete_buttons
-
 
 # ===== THANK YOU SCREEN FOR TAKEAWAY =====
 # This screen is shown after confirming a takeaway order. It displays the customer's name, the items they ordered, the total cost, and a thank you message.
@@ -805,7 +807,6 @@ def draw_complete_order():
     back_btn = draw_button("Back", WIDTH - 200, 560, 150, 50)
 
     return continue_btn, back_btn, delete_buttons
-
 
 # ===== NO TABLES SCREEN =====
 # This screen appears if the user selects "Dine-In" but there are no tables available.
@@ -1136,9 +1137,16 @@ while running:
                         continue
 
                     if multi_popup_type == "Soda":
-                        quantities = soda_quantities
-                    else:
-                        quantities = smoothie_quantities
+                         quantities = soda_quantities
+                    
+                    elif multi_popup_type == "Smoothie":
+                         quantities = smoothie_quantities
+                         
+                    elif multi_popup_type == "Tea":
+                         quantities = tea_quantities
+                         
+                    elif multi_popup_type == "Muffin":
+                        quantities = muffin_quantities
 
                     clicked_any = False
                     for name, (minus_btn, plus_btn) in item_rows.items():
@@ -1164,6 +1172,8 @@ while running:
                         multi_popup_type = None
                         soda_quantities = {n: 0 for n in SODA_OPTIONS}
                         smoothie_quantities = {n: 0 for n in SMOOTHIE_OPTIONS}
+                        tea_quantities = {n: 0 for n in TEA_OPTIONS}
+                        muffin_quantities = {n: 0 for n in MUFFIN_OPTIONS}
                         continue
 
                     continue
@@ -1234,15 +1244,25 @@ while running:
                     for item, rect in item_boxes:
                         if rect.collidepoint(event.pos):
                             if item == "Soda":
-                                multi_popup_type = "Soda"
-                                soda_quantities = {n: 0 for n in SODA_OPTIONS}
+                                 multi_popup_type = "Soda"
+                                 soda_quantities = {n: 0 for n in SODA_OPTIONS}
+                                 
                             elif item == "Smoothie":
-                                multi_popup_type = "Smoothie"
-                                smoothie_quantities = {n: 0 for n in SMOOTHIE_OPTIONS}
+                                 multi_popup_type = "Smoothie"
+                                 smoothie_quantities = {n: 0 for n in SMOOTHIE_OPTIONS}
+                                 
+                            elif item == "Tea":
+                                 multi_popup_type = "Tea"
+                                 tea_quantities = {n: 0 for n in TEA_OPTIONS}
+                            
+                            elif item == "Muffin":
+                                 multi_popup_type = "Muffin"
+                                 muffin_quantities = {n: 0 for n in MUFFIN_OPTIONS}
+                                 
                             else:
-                                popup_item = item
-                                popup_qty = 1
-                            break
+                                 popup_item = item
+                                 popup_qty = 1
+                                 break
 
                 # Bottom buttons
                 see_btn = pygame.Rect(260, HEIGHT - 72, 200, 55)
