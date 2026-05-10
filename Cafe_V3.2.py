@@ -352,13 +352,13 @@ def draw_item_grid():
 def draw_popup():
     global popup_qty, selected_milk, sugar_qty
 
-    # Dark transparent overlay
+    # Dark overlay
     overlay = pygame.Surface((WIDTH, HEIGHT))
     overlay.set_alpha(150)
     overlay.fill(BLACK)
     screen.blit(overlay, (0, 0))
 
-    # Main popup box
+    # Popup box
     popup = pygame.Rect(250, 120, 500, 400)
     pygame.draw.rect(screen, WHITE, popup)
 
@@ -381,23 +381,35 @@ def draw_popup():
     price_label = font_small.render(f"Price: ${price:.2f}", True, BLACK)
     screen.blit(price_label, (popup.x + (popup.width - price_label.get_width()) // 2, 340))
 
-    # Default values
+    # ===== QUANTITY BUTTONS (ALWAYS HERE, NEVER MOVED) =====
+    qty_y = 370  # perfect position under price, above milk/sugar
+
+    minus_btn = pygame.Rect(380, qty_y, 40, 40)
+    plus_btn  = pygame.Rect(580, qty_y, 40, 40)
+
+    pygame.draw.rect(screen, RED, minus_btn)
+    pygame.draw.rect(screen, GREEN, plus_btn)
+
+    qty_label = font_medium.render(str(popup_qty), True, BLACK)
+    screen.blit(qty_label, (popup.x + (popup.width - qty_label.get_width()) // 2, qty_y + 5))
+
+    screen.blit(font_medium.render("-", True, WHITE), (minus_btn.x + 14, qty_y + 4))
+    screen.blit(font_medium.render("+", True, WHITE), (plus_btn.x + 12, qty_y + 4))
+
+    # ===== HOT DRINK CUSTOMISATION (MILK + SUGAR) =====
     milk_buttons = []
     sugar_minus = sugar_plus = None
-    marsh_minus = marsh_plus = None
 
-    y_controls_start = 370
-
-    # ===== HOT DRINK CUSTOMISATION =====
     if popup_item in HOT_DRINKS:
 
-        # --- Milk selection (shifted left) ---
-        milk_label = font_small.render("Milk:", True, BLACK)
-        screen.blit(milk_label, (popup.x + 20, y_controls_start))
+        # Milk row BELOW quantity buttons
+        milk_y = qty_y + 50
 
-        milk_buttons = []
-        btn_x = popup.x + 90   # moved left
-        btn_y = y_controls_start - 5
+        milk_label = font_small.render("Milk:", True, BLACK)
+        screen.blit(milk_label, (popup.x + 20, milk_y))
+
+        btn_x = popup.x + 90
+        btn_y = milk_y - 5
         btn_w = 70
         btn_h = 30
         gap = 5
@@ -414,12 +426,14 @@ def draw_popup():
             milk_buttons.append((option, rect))
             btn_x += btn_w + gap
 
-        # --- Sugar (shifted left) ---
-        sugar_label = font_small.render("Sugar:", True, BLACK)
-        screen.blit(sugar_label, (popup.x + 20, y_controls_start + 40))
+        # Sugar row BELOW milk row
+        sugar_y = milk_y + 40
 
-        sugar_minus = pygame.Rect(popup.x + 110, y_controls_start + 40, 30, 30)
-        sugar_plus  = pygame.Rect(popup.x + 210, y_controls_start + 40, 30, 30)
+        sugar_label = font_small.render("Sugar:", True, BLACK)
+        screen.blit(sugar_label, (popup.x + 20, sugar_y))
+
+        sugar_minus = pygame.Rect(popup.x + 120, sugar_y, 30, 30)
+        sugar_plus  = pygame.Rect(popup.x + 200, sugar_y, 30, 30)
 
         pygame.draw.rect(screen, RED, sugar_minus)
         pygame.draw.rect(screen, GREEN, sugar_plus)
@@ -428,34 +442,15 @@ def draw_popup():
         screen.blit(font_small.render("+", True, WHITE), (sugar_plus.x + 9, sugar_plus.y + 3))
 
         sugar_text = font_small.render(str(sugar_qty), True, BLACK)
-        screen.blit(sugar_text, (popup.x + 165 - sugar_text.get_width() // 2, y_controls_start + 45))
+        screen.blit(sugar_text, (popup.x + 165 - sugar_text.get_width() // 2, sugar_y + 5))
 
-    # --- Quantity row moved UP so it's not under Add button ---
-        qty_y = y_controls_start + 90   # now ABOVE Add to Order
-
-    else:
-        qty_y = 390
-
-    # ===== QUANTITY BUTTONS (fixed + restored) =====
-    minus_btn = pygame.Rect(380, qty_y, 40, 40)
-    plus_btn = pygame.Rect(580, qty_y, 40, 40)
-
-    pygame.draw.rect(screen, RED, minus_btn)
-    pygame.draw.rect(screen, GREEN, plus_btn)
-
-    qty_label = font_medium.render(str(popup_qty), True, BLACK)
-    screen.blit(qty_label, (popup.x + (popup.width - qty_label.get_width()) // 2, qty_y + 5))
-
-    screen.blit(font_medium.render("-", True, WHITE), (minus_btn.x + 14, qty_y + 4))
-    screen.blit(font_medium.render("+", True, WHITE), (plus_btn.x + 12, qty_y + 4))
-
-    # Add to order button
+    # ===== ADD TO ORDER BUTTON =====
     add_btn = draw_button("Add to Order", 350, 450, 300, 50, BLUE_DARK)
 
     return (
         close_btn, minus_btn, plus_btn, add_btn,
         milk_buttons, sugar_minus, sugar_plus,
-        marsh_minus, marsh_plus
+        None, None
     )
 
 # ===== MULTI-OPTION POPUP (SODA / SMOOTHIE / MUFFINS / TEA) =====
