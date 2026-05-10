@@ -352,17 +352,17 @@ def draw_item_grid():
 def draw_popup():
     global popup_qty, selected_milk, sugar_qty, marshmallow_qty
 
-    # Dark transparent overlay to block background clicks
+    # Dark transparent overlay
     overlay = pygame.Surface((WIDTH, HEIGHT))
     overlay.set_alpha(150)
     overlay.fill(BLACK)
     screen.blit(overlay, (0, 0))
 
-    # Main popup box (same size as before)
+    # Main popup box
     popup = pygame.Rect(250, 120, 500, 400)
     pygame.draw.rect(screen, WHITE, popup)
 
-    # Close button (X)
+    # Close button
     close_btn = pygame.Rect(690, 130, 40, 40)
     pygame.draw.rect(screen, RED, close_btn)
     screen.blit(font_medium.render("X", True, WHITE), (701, 138))
@@ -376,12 +376,12 @@ def draw_popup():
     popup_img = load_image(f"{popup_item}.png", GREY, (200, 150))
     screen.blit(popup_img, (img_x, 180))
 
-    # Item price
+    # Price
     price = get_price(popup_item)
     price_label = font_small.render(f"Price: ${price:.2f}", True, BLACK)
     screen.blit(price_label, (popup.x + (popup.width - price_label.get_width()) // 2, 340))
 
-    # Default return values for non-hot drinks
+    # Default values
     milk_buttons = []
     sugar_minus = sugar_plus = None
     marsh_minus = marsh_plus = None
@@ -391,12 +391,12 @@ def draw_popup():
     # ===== HOT DRINK CUSTOMISATION =====
     if popup_item in HOT_DRINKS:
 
-        # --- Milk selection buttons ---
+        # --- Milk selection (shifted left) ---
         milk_label = font_small.render("Milk:", True, BLACK)
-        screen.blit(milk_label, (popup.x + 40, y_controls_start))
+        screen.blit(milk_label, (popup.x + 20, y_controls_start))
 
         milk_buttons = []
-        btn_x = popup.x + 110
+        btn_x = popup.x + 90   # moved left
         btn_y = y_controls_start - 5
         btn_w = 70
         btn_h = 30
@@ -414,12 +414,12 @@ def draw_popup():
             milk_buttons.append((option, rect))
             btn_x += btn_w + gap
 
-        # --- Sugar quantity buttons ---
+        # --- Sugar (shifted left) ---
         sugar_label = font_small.render("Sugar:", True, BLACK)
-        screen.blit(sugar_label, (popup.x + 40, y_controls_start + 40))
+        screen.blit(sugar_label, (popup.x + 20, y_controls_start + 40))
 
-        sugar_minus = pygame.Rect(popup.x + 130, y_controls_start + 40, 30, 30)
-        sugar_plus = pygame.Rect(popup.x + 230, y_controls_start + 40, 30, 30)
+        sugar_minus = pygame.Rect(popup.x + 110, y_controls_start + 40, 30, 30)
+        sugar_plus  = pygame.Rect(popup.x + 210, y_controls_start + 40, 30, 30)
 
         pygame.draw.rect(screen, RED, sugar_minus)
         pygame.draw.rect(screen, GREEN, sugar_plus)
@@ -428,15 +428,15 @@ def draw_popup():
         screen.blit(font_small.render("+", True, WHITE), (sugar_plus.x + 9, sugar_plus.y + 3))
 
         sugar_text = font_small.render(str(sugar_qty), True, BLACK)
-        screen.blit(sugar_text, (popup.x + 185 - sugar_text.get_width() // 2, y_controls_start + 45))
+        screen.blit(sugar_text, (popup.x + 165 - sugar_text.get_width() // 2, y_controls_start + 45))
 
-        # --- Marshmallows (ONLY for Hot Chocolate) ---
+        # --- Marshmallows (shifted right) ---
         if popup_item == "Hot Chocolate":
             marsh_label = font_small.render("Marshmallows:", True, BLACK)
-            screen.blit(marsh_label, (popup.x + 280, y_controls_start + 40))
+            screen.blit(marsh_label, (popup.x + 300, y_controls_start + 40))
 
-            marsh_minus = pygame.Rect(popup.x + 400, y_controls_start + 40, 30, 30)
-            marsh_plus = pygame.Rect(popup.x + 460, y_controls_start + 40, 30, 30)
+            marsh_minus = pygame.Rect(popup.x + 430, y_controls_start + 40, 30, 30)
+            marsh_plus  = pygame.Rect(popup.x + 490, y_controls_start + 40, 30, 30)
 
             pygame.draw.rect(screen, RED, marsh_minus)
             pygame.draw.rect(screen, GREEN, marsh_plus)
@@ -445,16 +445,15 @@ def draw_popup():
             screen.blit(font_small.render("+", True, WHITE), (marsh_plus.x + 9, marsh_plus.y + 3))
 
             marsh_text = font_small.render(str(marshmallow_qty), True, BLACK)
-            screen.blit(marsh_text, (popup.x + 430 - marsh_text.get_width() // 2, y_controls_start + 45))
+            screen.blit(marsh_text, (popup.x + 460 - marsh_text.get_width() // 2, y_controls_start + 45))
 
-        # Move quantity row down to make space
-        qty_y = y_controls_start + 80
+        # Move quantity row DOWN so nothing overlaps
+        qty_y = y_controls_start + 120
 
     else:
-        # Non-hot drinks keep original quantity position
         qty_y = 390
 
-    # ===== QUANTITY BUTTONS (same as before) =====
+    # ===== QUANTITY BUTTONS (fixed + restored) =====
     minus_btn = pygame.Rect(380, qty_y, 40, 40)
     plus_btn = pygame.Rect(580, qty_y, 40, 40)
 
@@ -470,13 +469,11 @@ def draw_popup():
     # Add to order button
     add_btn = draw_button("Add to Order", 350, 450, 300, 50, BLUE_DARK)
 
-    # Return all interactive elements so the main loop can detect clicks
     return (
         close_btn, minus_btn, plus_btn, add_btn,
         milk_buttons, sugar_minus, sugar_plus,
         marsh_minus, marsh_plus
     )
-
 
 # ===== MULTI-OPTION POPUP (SODA / SMOOTHIE / MUFFINS / TEA) =====
 def draw_multi_popup():
@@ -587,7 +584,7 @@ def draw_order_summary():
         screen.blit(text_surf, (x, y))
         
         # Delete button
-        del_btn = pygame.Rect(x + 260, y - 2, 90, 32)
+        del_btn = pygame.Rect(x + 300, y - 2, 90, 32)   # moved right 40px
         pygame.draw.rect(screen, RED, del_btn)
         del_label = font_small.render("Delete", True, WHITE)
         screen.blit(del_label, (del_btn.x + (del_btn.width - del_label.get_width()) // 2,
@@ -645,7 +642,6 @@ def draw_thank_you_takeaway():
 
     thanks = font_medium.render("Thank you for ordering at our Cafe!", True, BLACK)
     screen.blit(thanks, (WIDTH//2 - thanks.get_width()//2, panel_y + panel_h + 30))
-
 
 # ===== THANK YOU SCREEN FOR DINE-IN =====
 # This screen is shown after confirming a dine-in order. It displays the assigned table number, the items ordered, the total cost, and a thank you message.
@@ -786,7 +782,7 @@ def draw_complete_order():
         text_surf = font_small.render(f"{item} x{qty} - ${price * qty:.2f}", True, BLACK)
         screen.blit(text_surf, (x, y))
 
-        del_btn = pygame.Rect(x + 260, y - 2, 90, 32)
+        del_btn = pygame.Rect(x + 300, y - 2, 90, 32)   # moved right 40px
         pygame.draw.rect(screen, RED, del_btn)
         del_label = font_small.render("Delete", True, WHITE)
         screen.blit(del_label, (del_btn.x + (del_btn.width - del_label.get_width()) // 2,
@@ -919,7 +915,6 @@ def draw_dine_in():
     enter_btn = draw_button("Enter", WIDTH//2 - 150, 450, 300, 70)
     return enter_btn, table_num
 
-
 # ===== UPDATED REVIEW ORDER SCREEN (RESTORED SPACING) =====
 def draw_complete_order():
     screen.fill(WHITE)
@@ -963,7 +958,6 @@ def draw_complete_order():
     back_btn = draw_button("Back", WIDTH - 200, 560, 150, 50)
 
     return continue_btn, back_btn, delete_buttons
-
 
 # ===== NO TABLES SCREEN =====
 def draw_no_tables():
