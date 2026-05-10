@@ -350,7 +350,7 @@ def draw_item_grid():
 # and marshmallow quantity (Hot Chocolate only).
 # It does NOT change the printed order text.
 def draw_popup():
-    global popup_qty, selected_milk, sugar_qty, marshmallow_qty
+    global popup_qty, selected_milk, sugar_qty
 
     # Dark transparent overlay
     overlay = pygame.Surface((WIDTH, HEIGHT))
@@ -430,25 +430,8 @@ def draw_popup():
         sugar_text = font_small.render(str(sugar_qty), True, BLACK)
         screen.blit(sugar_text, (popup.x + 165 - sugar_text.get_width() // 2, y_controls_start + 45))
 
-        # --- Marshmallows (shifted right) ---
-        if popup_item == "Hot Chocolate":
-            marsh_label = font_small.render("Marshmallows:", True, BLACK)
-            screen.blit(marsh_label, (popup.x + 300, y_controls_start + 40))
-
-            marsh_minus = pygame.Rect(popup.x + 430, y_controls_start + 40, 30, 30)
-            marsh_plus  = pygame.Rect(popup.x + 490, y_controls_start + 40, 30, 30)
-
-            pygame.draw.rect(screen, RED, marsh_minus)
-            pygame.draw.rect(screen, GREEN, marsh_plus)
-
-            screen.blit(font_small.render("-", True, WHITE), (marsh_minus.x + 9, marsh_minus.y + 3))
-            screen.blit(font_small.render("+", True, WHITE), (marsh_plus.x + 9, marsh_plus.y + 3))
-
-            marsh_text = font_small.render(str(marshmallow_qty), True, BLACK)
-            screen.blit(marsh_text, (popup.x + 460 - marsh_text.get_width() // 2, y_controls_start + 45))
-
-        # Move quantity row DOWN so nothing overlaps
-        qty_y = y_controls_start + 120
+    # --- Quantity row moved UP so it's not under Add button ---
+        qty_y = y_controls_start + 90   # now ABOVE Add to Order
 
     else:
         qty_y = 390
