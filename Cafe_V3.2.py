@@ -350,7 +350,7 @@ def draw_item_grid():
 # and marshmallow quantity (Hot Chocolate only).
 # It does NOT change the printed order text.
 def draw_popup():
-    global popup_qty, selected_milk, sugar_qty
+    global popup_qty, selected_milk
 
     # Dark overlay
     overlay = pygame.Surface((WIDTH, HEIGHT))
@@ -396,7 +396,7 @@ def draw_popup():
     screen.blit(font_medium.render("-", True, WHITE), (minus_btn.x + 14, qty_y + 4))
     screen.blit(font_medium.render("+", True, WHITE), (plus_btn.x + 12, qty_y + 4))
 
-    # ===== HOT DRINK CUSTOMISATION (MILK + SUGAR) =====
+    # ===== HOT DRINK CUSTOMISATION (MILK) =====
     milk_buttons = []
     sugar_minus = sugar_plus = None
 
@@ -425,24 +425,6 @@ def draw_popup():
 
             milk_buttons.append((option, rect))
             btn_x += btn_w + gap
-
-        # Sugar row BELOW milk row
-        sugar_y = milk_y + 40
-
-        sugar_label = font_small.render("Sugar:", True, BLACK)
-        screen.blit(sugar_label, (popup.x + 20, sugar_y))
-
-        sugar_minus = pygame.Rect(popup.x + 120, sugar_y, 30, 30)
-        sugar_plus  = pygame.Rect(popup.x + 200, sugar_y, 30, 30)
-
-        pygame.draw.rect(screen, RED, sugar_minus)
-        pygame.draw.rect(screen, GREEN, sugar_plus)
-
-        screen.blit(font_small.render("-", True, WHITE), (sugar_minus.x + 9, sugar_minus.y + 3))
-        screen.blit(font_small.render("+", True, WHITE), (sugar_plus.x + 9, sugar_plus.y + 3))
-
-        sugar_text = font_small.render(str(sugar_qty), True, BLACK)
-        screen.blit(sugar_text, (popup.x + 165 - sugar_text.get_width() // 2, sugar_y + 5))
 
     # ===== ADD TO ORDER BUTTON =====
     add_btn = draw_button("Add to Order", 350, 450, 300, 50, BLUE_DARK)
